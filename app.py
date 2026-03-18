@@ -69,8 +69,22 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
 
 
 # ── Session State 초기화 ─────────────────────────────────
+import os
+
+_CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_etc", "trades_enriched_v1.csv")
+
 if "trades" not in st.session_state:
-    st.session_state.trades = get_sample_trades()
+    if os.path.exists(_CSV_PATH):
+        st.session_state.trades = pd.read_csv(_CSV_PATH, encoding="utf-8-sig")
+        # date 컬럼 파싱
+        if "date" in st.session_state.trades.columns:
+            st.session_state.trades["date"] = pd.to_datetime(st.session_state.trades["date"])
+        if "signal_date" in st.session_state.trades.columns:
+            st.session_state.trades["signal_date"] = pd.to_datetime(
+                st.session_state.trades["signal_date"], errors="coerce"
+            )
+    else:
+        st.session_state.trades = get_sample_trades()
 if "equity_curve" not in st.session_state:
     st.session_state.equity_curve = get_sample_equity_curve()
 if "positions" not in st.session_state:
