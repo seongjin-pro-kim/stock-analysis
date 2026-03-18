@@ -1,0 +1,125 @@
+"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit"""
+import streamlit as st
+import pandas as pd
+from sample_data import (
+    get_sample_trades, get_sample_equity_curve,
+    get_sample_positions, get_sample_signals,
+)
+
+# ── 페이지 설정 ──────────────────────────────────────────
+st.set_page_config(
+    page_title="GAP R-Zone Dashboard",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# ── 다크 테마 CSS ────────────────────────────────────────
+st.markdown("""
+<style>
+/* 전역 다크 스타일 */
+[data-testid="stSidebar"] {
+    background-color: #0d1117;
+    border-right: 1px solid #1e2530;
+}
+.stApp { background-color: #0a0e14; }
+
+/* KPI 카드 */
+.kpi-card {
+    background: #111820;
+    border: 1px solid #1e2530;
+    border-radius: 10px;
+    padding: 16px 20px;
+    text-align: left;
+}
+.kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 4px; }
+.kpi-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi-sub { color: #7a8599; font-size: 11px; }
+.positive { color: #22c55e; }
+.negative { color: #ef4444; }
+.neutral { color: #14b8a6; }
+
+/* 결과 뱃지 */
+.badge-win { background:#22c55e22; color:#22c55e; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+.badge-lose { background:#ef444422; color:#ef4444; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+.badge-progress { background:#eab30822; color:#eab308; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+.badge-kospi { background:#3b82f622; color:#3b82f6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+.badge-kosdaq { background:#8b5cf622; color:#a78bfa; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+
+/* 섹션 헤더 */
+.section-header { color: #e2e8f0; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+
+/* 테이블 스타일 */
+.dataframe { font-variant-numeric: tabular-nums !important; }
+div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; }
+
+/* 사이드바 로고 */
+.logo-box {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0 16px 0; border-bottom: 1px solid #1e2530; margin-bottom: 16px;
+}
+.logo-icon { font-size: 28px; }
+.logo-title { color: #e2e8f0; font-size: 16px; font-weight: 700; }
+.logo-sub { color: #7a8599; font-size: 11px; }
+
+/* metric 숨기기 (기본 스타일 덮어쓰기) */
+[data-testid="stMetric"] { background: #111820; border: 1px solid #1e2530; border-radius: 10px; padding: 12px 16px; }
+</style>
+""", unsafe_allow_html=True)
+
+
+# ── Session State 초기화 ─────────────────────────────────
+if "trades" not in st.session_state:
+    st.session_state.trades = get_sample_trades()
+if "equity_curve" not in st.session_state:
+    st.session_state.equity_curve = get_sample_equity_curve()
+if "positions" not in st.session_state:
+    st.session_state.positions = get_sample_positions()
+if "signals" not in st.session_state:
+    st.session_state.signals = get_sample_signals()
+
+
+# ── 사이드바 네비게이션 ──────────────────────────────────
+with st.sidebar:
+    st.markdown("""
+    <div class="logo-box">
+        <span class="logo-icon">📈</span>
+        <div>
+            <div class="logo-title">GAP R-Zone</div>
+            <div class="logo-sub">v6.5 Strategy</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    page = st.radio(
+        "메뉴",
+        ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록",
+         "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
+        label_visibility="collapsed",
+    )
+
+    st.divider()
+    st.caption("Created with Streamlit + Python")
+
+
+# ── 공통 헬퍼 (utils.py에서 import) ──────────────────────
+from utils import fmt_krw, result_badge, market_badge
+
+
+# ── 페이지 라우팅 ────────────────────────────────────────
+from views import overview, performance, trade_log, signals, market, risk, data_mgmt
+
+if "메인 대시보드" in page:
+    overview.render()
+elif "매매 성과" in page:
+    performance.render()
+elif "매매 기록" in page:
+    trade_log.render()
+elif "시그널" in page:
+    signals.render()
+elif "시장 개요" in page:
+    market.render()
+elif "리스크" in page:
+    risk.render()
+elif "데이터 관리" in page:
+    data_mgmt.render()
