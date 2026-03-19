@@ -1,5 +1,0 @@
-market,,code,signal_date,cur_price,gap_rate,rise_2to1,rise_1to0,target_price,stop_price,to_target_pct,to_stop_pct,rr_ratio,ma_arr,total_range,prev_range,high_pt,low_pt,vol_spike_hist,grade,is_core
-시장,,종목코드,신호일,현재가,갭(%),rise_2to1,rise_1to0,target_price,stop_price,목표까지(%),손절까지(%),손익비,이평배열,전일시가→금일종가,전일고가-저가,전략상단,전략하단,직전10봉 거래량급등,grade,is_core
-코스피,남양 우,3925,20260313,40950,8.89,0,13.75,52300,32625,27.72,20.33,1.36,MA5>MA40>MA20>MA60>MA120,5550,1850,42800,34250,FALSE,A,TRUE
-코스닥,한텍,98070,20260313,42350,6.44,0,6.94,50200,35450,18.54,16.29,1.14,MA5>MA40>MA60>MA20>MA120,4600,2850,45200,37600,FALSE,A,TRUE
-코스닥,에이럭스,475580,20260311,10440,7.34,0,16.13,13210,8100,26.53,22.41,1.18,MA120>MA60>MA40>MA20>MA5,1560,430,10870,8940,FALSE,A,TRUE

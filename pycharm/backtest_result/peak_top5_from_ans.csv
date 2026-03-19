@@ -1,6 +1,0 @@
-﻿market,code,date,gap_rate,rise_2to1,Unnamed: 5,rise_1to0,target_price,Unnamed: 8,stop_price,reached_20,reached_80,stopped,near_miss,peak_pct,days_to_reach,min_low_pct,ma_arr,total_range,prev_range,high_pt,low_pt,cond1_hit,cond2_hit,cond3_hit,strategy_full,vol_spike_hist
-KOSPI,5950.0,20251024.0,22.22,29.93,113%,26.4,12500.0,4750.0,7750.0,True,False,False,False,390.2,2.0,-10.51,MA5>MA20>MA60>MA40>MA120,3100.0,760.0,13160.0,7860.0,False,False,False,False,False
-KOSPI,5950.0,20251017.0,2.35,2.98,51%,5.79,6210.0,1065.0,5145.0,True,False,False,False,343.6,3.0,0.35,MA60>MA120>MA40>MA20>MA5,470.0,160.0,6010.0,5310.0,False,False,False,False,True
-KOSPI,5387.0,20251016.0,3.57,0.29,5%,5.56,178300.0,12850.0,165450.0,True,False,False,False,342.9,1.0,0.9,MA5>MA40>MA60>MA20>MA120,9900.0,1200.0,181500.0,166100.0,False,False,False,False,False
-KOSPI,570103.0,20251107.0,2.84,-1.19,-0.35,3.36,6045.0,433.0,5612.0,True,False,False,False,243.8,5.0,-3.02,MA120>MA60>MA40>MA20>MA5,255.0,70.0,6065.0,5600.0,False,False,False,False,False
-KOSPI,18500.0,20251016.0,2.85,1.73,41%,4.24,1389.0,153.0,1236.0,True,False,False,False,225.5,3.0,-1.42,MA120>MA60>MA40>MA20>MA5,77.0,24.0,1376.0,1245.0,False,False,False,False,False
