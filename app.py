@@ -1,4 +1,4 @@
-"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit (v2)"""
+"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit (v2.1 — 톤다운·간격·정렬·음영 수정)"""
 import streamlit as st
 import pandas as pd
 from sample_data import (
@@ -25,18 +25,22 @@ st.markdown("""
 }
 .stApp { background-color: #0a0e14; }
 
-/* KPI 카드 */
+/* ── 섹션 간격 3배 (h3/h4 기준) ── */
+h3, h4 { margin-top: 2.4em !important; margin-bottom: 0.6em !important; }
+
+/* KPI 카드 — 균일 사이즈 */
 .kpi-card {
     background: #111820;
     border: 1px solid #1e2530;
     border-radius: 10px;
-    padding: 16px 20px;
+    padding: 18px 20px;
     text-align: left;
     position: relative;
+    min-height: 90px;
 }
-.kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 4px; }
-.kpi-value { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.kpi-sub { color: #7a8599; font-size: 11px; }
+.kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 6px; }
+.kpi-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi-sub { color: #7a8599; font-size: 11px; margin-top:2px; }
 .positive { color: #22c55e; }
 .negative { color: #ef4444; }
 .neutral { color: #14b8a6; }
@@ -46,15 +50,19 @@ st.markdown("""
 .badge-lose { background:#ef444422; color:#ef4444; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
 .badge-progress { background:#eab30822; color:#eab308; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
 .badge-ing { background:#3b82f622; color:#3b82f6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; }
-.badge-kospi { background:#3b82f622; color:#3b82f6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-kosdaq { background:#8b5cf622; color:#a78bfa; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-nasdaq { background:#14b8a622; color:#14b8a6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-btc { background:#eab30822; color:#eab308; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
+/* 시장 뱃지 — 50% 축소 */
+.badge-kospi { background:#3b82f622; color:#3b82f6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
+.badge-kosdaq { background:#8b5cf622; color:#a78bfa; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
+.badge-nasdaq { background:#14b8a622; color:#14b8a6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
+.badge-btc { background:#eab30822; color:#eab308; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
+
+/* 등급 A 종목 행 하이라이트 */
+.grade-a-row { background: rgba(239, 68, 68, 0.30) !important; }
 
 /* 하이라이트 열 (목표율/손익비/기대값) */
 .highlight-cell { background: rgba(20,184,166,0.06); }
 
-/* 섹션 헤더 */
+/* 섹션 헤더 — 톤다운 아이콘 색상 */
 .section-header { color: #e2e8f0; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 
 /* 테이블 스타일 */
@@ -160,8 +168,8 @@ with st.sidebar:
 
     page = st.radio(
         "메뉴",
-        ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록",
-         "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
+        ["◈ 메인 대시보드", "▦ 매매 성과", "▤ 매매 기록",
+         "◉ 시그널", "◎ 시장 개요", "△ 리스크", "▫ 데이터 관리"],
         label_visibility="collapsed",
     )
 
@@ -188,5 +196,5 @@ elif "시장 개요" in page:
     market.render()
 elif "리스크" in page:
     risk.render()
-elif "데이터 관리" in page:
+elif "데이터" in page:
     data_mgmt.render()

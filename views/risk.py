@@ -1,4 +1,4 @@
-"""🛡️ 리스크 관리 — 설명 툴팁, 주간 P&L 4개, 단일색 바, 링크아이콘 설명"""
+"""△ 리스크 관리 — 톤다운 아이콘, 3배 섹션 간격"""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,7 +10,7 @@ def render():
     positions = st.session_state.positions
     equity = st.session_state.equity_curve
 
-    st.markdown("### 🛡️ 리스크 관리")
+    st.markdown("### ▸ 리스크 관리")
 
     # ── 포지션 사이징 계산기 (설명 포함) ─────────────────
     st.markdown("""
@@ -116,7 +116,6 @@ def render():
         rr_data = rr_data.dropna(subset=["rr"])
         rr_data = rr_data[rr_data["rr"] < 50]
 
-        # 톤다운 색상 (#14b8a6 → 어두운 톤)
         fig2 = go.Figure(go.Histogram(
             x=rr_data["rr"], nbinsx=12,
             marker_color="#0d5c54",
@@ -146,9 +145,8 @@ def render():
     total_eq = total_eq.dropna()
 
     if len(total_eq) >= 5:
-        # 주차 구분
         total_eq["week_num"] = ((total_eq.index - total_eq.index[0]) // 5)
-        weeks = sorted(total_eq["week_num"].unique())[-4:]  # 최근 4주
+        weeks = sorted(total_eq["week_num"].unique())[-4:]
 
         week_cols = st.columns(4)
         for idx, week in enumerate(weeks):
@@ -156,7 +154,6 @@ def render():
                 week_data = total_eq[total_eq["week_num"] == week]
                 week_label = f"Week {int(week) + 1}"
 
-                # 단일색 두가지 톤
                 colors = ["#14b8a6" if v >= 0 else "#0d5c54" for v in week_data["daily_return"]]
 
                 fig_w = go.Figure(go.Bar(
@@ -175,7 +172,6 @@ def render():
                 )
                 st.plotly_chart(fig_w, use_container_width=True)
 
-                # 주간 합계
                 week_total = week_data["daily_return"].sum()
                 color = "#22c55e" if week_total >= 0 else "#ef4444"
                 st.markdown(f"<div style='text-align:center; font-size:12px; color:{color}; font-weight:600;'>{week_total:+.2f}%</div>",
@@ -215,7 +211,7 @@ def render():
         icon_color = "#ef4444" if is_warning else "#22c55e"
         icon = "●"
         st.markdown(f"""
-        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #1e2530;">
+        <div style="display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid #1e2530;">
             <span style="color:{icon_color}; font-size:8px;">{icon}</span>
             <span style="color:#7a8599; font-size:13px; min-width:120px;">{label}</span>
             <span style="color:#e2e8f0; font-size:14px; font-weight:600;">{value}</span>

@@ -1,4 +1,4 @@
-"""🌐 시장 개요 — 톤다운 아이콘, KOSPI/KOSDAQ/NASDAQ/BTC, 단일색 섹터 차트"""
+"""◎ 시장 개요 — 톤다운 아이콘, 지수 차트 x/y축 표시, 3배 섹션 간격"""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 
 def render():
-    st.markdown("### 🌐 시장 개요")
+    st.markdown("### ▸ 시장 개요")
 
     # ── 지수 정보 (4개: KOSPI, KOSDAQ, NASDAQ, BTC) ───────
     indices = [
@@ -39,7 +39,7 @@ def render():
                 <div class="kpi-sub {c_class}">{chg_str} ({sign}{idx['pct']:.2f}%)</div>
             </div>""", unsafe_allow_html=True)
 
-            # 미니 차트
+            # 미니 차트 — x/y 축 표시 (촘촘하지 않게)
             np.random.seed(idx["seed"])
             days = 30
             base = idx["value"] * 0.97
@@ -58,9 +58,19 @@ def render():
             ))
             fig.update_layout(
                 plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
-                height=120, margin=dict(l=0, r=0, t=5, b=0),
-                xaxis=dict(showticklabels=False, showgrid=False),
-                yaxis=dict(showticklabels=False, showgrid=False),
+                height=140, margin=dict(l=40, r=10, t=5, b=20),
+                xaxis=dict(
+                    showticklabels=True, showgrid=False,
+                    color="#4a5568", tickfont=dict(size=8),
+                    nticks=4,
+                    title=None,
+                ),
+                yaxis=dict(
+                    showticklabels=True, showgrid=True, gridcolor="#1e2530",
+                    color="#4a5568", tickfont=dict(size=8),
+                    nticks=4,
+                    title=None,
+                ),
             )
             st.plotly_chart(fig, use_container_width=True)
 
@@ -79,7 +89,6 @@ def render():
     ]
     sec_df = pd.DataFrame(sectors).sort_values("change", ascending=True)
 
-    # 단일 색 (#14b8a6 teal) 두가지 톤
     bar_colors = ["#14b8a6" if v >= 0 else "#0d5c54" for v in sec_df["change"]]
 
     fig2 = go.Figure(go.Bar(
@@ -150,7 +159,7 @@ def render():
     for e in events:
         ic = impact_colors.get(e["impact"], "#4a5568")
         st.markdown(f"""
-        <div style="display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid #1e2530;">
+        <div style="display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid #1e2530;">
             <span style="color:#7a8599; font-size:12px; min-width:50px;">{e['date']}</span>
             <span style="color:{ic}; font-size:10px; font-weight:700; border:1px solid {ic}; padding:1px 6px; border-radius:10px; min-width:24px; text-align:center;">{e['impact']}</span>
             <div>

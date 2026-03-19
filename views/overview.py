@@ -1,4 +1,4 @@
-"""🏠 메인 대시보드 — 지수차트, KPI, Best MA, 계좌별 자산추이, 최근매매+Signal Archive, 옵션만기"""
+"""◈ 메인 대시보드 — 톤다운 아이콘, 균일 KPI, MA 넘버링, 정렬 개선, 3배 간격"""
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -13,7 +13,7 @@ def render():
     signal_archive = st.session_state.signal_archive
 
     # ── 1. 지수 차트 (최상단 4개: KOSPI, KOSDAQ, NASDAQ, BTC) ──
-    st.markdown("### 📈 시장 지수")
+    st.markdown("### ▸ 시장 지수")
     idx_configs = [
         {"name": "KOSPI", "value": 2685.42, "change": +12.35, "color": "#3b82f6", "seed": 101},
         {"name": "KOSDAQ", "value": 872.15, "change": -3.21, "color": "#a78bfa", "seed": 102},
@@ -68,7 +68,7 @@ def render():
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
 
     # ── 2. 핵심 지표 KPI (6개: 기존 5개 + Best MA) ────────
-    st.markdown("### 📊 핵심 지표")
+    st.markdown("### ▸ 핵심 지표")
 
     # 거래 계산 (진행중 제외)
     completed = trades[trades["result"].isin(["승", "패"])]
@@ -118,7 +118,7 @@ def render():
          f"{pnl_pct:+.1f}%", "positive" if total_pnl >= 0 else "negative")
     _kpi(c5, "현재 자산", f"₩{current_capital/1e4:,.0f}만", "합산 기준", "neutral")
 
-    # Best MA 카드
+    # Best MA 카드 — 아이콘 → 넘버링
     with c6:
         if best_by_wins is not None:
             ma1 = best_by_wins["ma_pattern"][:20] + ("…" if len(str(best_by_wins["ma_pattern"])) > 20 else "")
@@ -127,11 +127,11 @@ def render():
             <div class="kpi-card">
                 <div class="kpi-label">Best MA</div>
                 <div style="font-size:11px; color:#e2e8f0; margin-top:4px;">
-                    <span style="color:#14b8a6;">🏅</span> {ma1}<br>
+                    <span style="color:#14b8a6; font-weight:700;">1.</span> {ma1}<br>
                     <span style="font-size:10px; color:#7a8599;">{int(best_by_wins['win_cnt'])}승</span>
                 </div>
                 <div style="font-size:11px; color:#e2e8f0; margin-top:2px;">
-                    <span style="color:#eab308;">📈</span> {ma2}<br>
+                    <span style="color:#eab308; font-weight:700;">2.</span> {ma2}<br>
                     <span style="font-size:10px; color:#7a8599;">avg {best_by_profit['avg_profit']:.1f}%</span>
                 </div>
             </div>""", unsafe_allow_html=True)
@@ -141,7 +141,7 @@ def render():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── 3. 계좌별 자산 추이 ───────────────────────────────
-    st.markdown("### 💰 자산 추이 (계좌별)")
+    st.markdown("### ▸ 자산 추이 (계좌별)")
 
     account_colors = {"1234": "#14b8a6", "5678": "#3b82f6", "9012": "#a78bfa", "3456": "#eab308"}
     fig_eq = go.Figure()
@@ -172,7 +172,7 @@ def render():
     col_pos, col_exp = st.columns(2)
 
     with col_pos:
-        st.markdown("### 📌 보유 포지션")
+        st.markdown("### ▸ 보유 포지션")
         if len(positions) > 0:
             fig_pie = go.Figure(go.Pie(
                 labels=positions["name"],
@@ -200,7 +200,7 @@ def render():
             st.info("보유 포지션이 없습니다.")
 
     with col_exp:
-        st.markdown("### 📅 옵션 만기 / 주요 이벤트")
+        st.markdown("### ▸ 옵션 만기 / 주요 이벤트")
         if len(positions) > 0 and "option_expiry" in positions.columns:
             exp_df = positions.copy()
             exp_df = exp_df[exp_df["option_expiry"].notna() & (exp_df["option_expiry"] != "")]
@@ -243,32 +243,28 @@ def render():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── 5. 최근 매매 (좌) + Signal Archive (우) ───────────
+    # 정렬 규칙: 시장·날짜·손익비·소요일=가운데, 종목=좌측, 갭·목표·진행·수익=우측
     col_recent, col_archive = st.columns(2)
 
     with col_recent:
-        st.markdown("### 🕐 최근 매매")
+        st.markdown("### ▸ 최근 매매")
         recent = trades.sort_values("date", ascending=False).head(10).copy()
 
         rows_html = ""
         for _, r in recent.iterrows():
             pnl_val = r["peak_pct"] if r["result"] == "승" else r["min_low_pct"]
             pnl_color = "#22c55e" if pnl_val >= 0 else "#ef4444"
-            # 진행중이면 현재 수익현황
             if r["result"] == "잉":
-                current_pnl = r["peak_pct"]  # 현재 수익 = peak (진행중)
+                current_pnl = r["peak_pct"]
                 pnl_color = "#3b82f6"
             else:
                 current_pnl = pnl_val
 
-            # rr_ratio
             rr = r.get("rr_ratio", 0)
             rr_str = f"{float(rr):.1f}" if pd.notna(rr) else "-"
-
-            # target_rate
             tgt_rate = r.get("target_rate", 0)
             tgt_str = f"{float(tgt_rate):.1f}%" if pd.notna(tgt_rate) else "-"
 
-            # 진행율 계산
             if r["entry_price"] > 0 and r["target_price"] > r["entry_price"]:
                 progress = (r["peak_pct"] / ((r["target_price"] - r["entry_price"]) / r["entry_price"] * 100)) * 100
                 progress = min(max(progress, 0), 100)
@@ -277,15 +273,15 @@ def render():
 
             rows_html += f"""
             <tr style="border-bottom:1px solid #1e2530;">
-                <td style="padding:6px; font-size:11px;">{market_badge(r['market'])}</td>
-                <td style="padding:6px; color:#7a8599; font-size:11px;">{fmt_date_short(r['date'])}</td>
-                <td style="padding:6px; color:#e2e8f0; font-weight:500; font-size:12px;">{r['name']}</td>
+                <td style="padding:6px; font-size:11px; text-align:center;">{market_badge(r['market'])}</td>
+                <td style="padding:6px; color:#7a8599; font-size:11px; text-align:center;">{fmt_date_short(r['date'])}</td>
+                <td style="padding:6px; color:#e2e8f0; font-weight:500; font-size:12px; text-align:left;">{r['name']}</td>
                 <td style="padding:6px; color:#e2e8f0; text-align:right; font-size:11px;">{r['gap_rate']:.1f}%</td>
                 <td style="padding:6px; color:#14b8a6; text-align:right; font-size:11px;">{tgt_str}</td>
-                <td style="padding:6px; color:#e2e8f0; text-align:right; font-size:11px;">{rr_str}</td>
+                <td style="padding:6px; color:#e2e8f0; text-align:center; font-size:11px;">{rr_str}</td>
                 <td style="padding:6px; text-align:right; font-size:11px; color:#7a8599;">{progress:.0f}%</td>
                 <td style="padding:6px; color:{pnl_color}; text-align:right; font-size:11px; font-weight:600;">{current_pnl:+.1f}%</td>
-                <td style="padding:6px; color:#7a8599; text-align:right; font-size:11px;">{r['days_to_target']}일</td>
+                <td style="padding:6px; color:#7a8599; text-align:center; font-size:11px;">{r['days_to_target']}일</td>
             </tr>"""
 
         st.markdown(f"""
@@ -293,15 +289,15 @@ def render():
         <table style="width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap;">
             <thead>
                 <tr style="border-bottom:2px solid #1e2530; background:#111820;">
-                    <th style="padding:6px; color:#7a8599; text-align:left;">시장</th>
-                    <th style="padding:6px; color:#7a8599; text-align:left;">날짜</th>
+                    <th style="padding:6px; color:#7a8599; text-align:center;">시장</th>
+                    <th style="padding:6px; color:#7a8599; text-align:center;">날짜</th>
                     <th style="padding:6px; color:#7a8599; text-align:left;">종목</th>
                     <th style="padding:6px; color:#7a8599; text-align:right;">갭%</th>
                     <th style="padding:6px; color:#7a8599; text-align:right;">목표율</th>
-                    <th style="padding:6px; color:#7a8599; text-align:right;">손익비</th>
+                    <th style="padding:6px; color:#7a8599; text-align:center;">손익비</th>
                     <th style="padding:6px; color:#7a8599; text-align:right;">진행</th>
                     <th style="padding:6px; color:#7a8599; text-align:right;">수익%</th>
-                    <th style="padding:6px; color:#7a8599; text-align:right;">소요일</th>
+                    <th style="padding:6px; color:#7a8599; text-align:center;">소요일</th>
                 </tr>
             </thead>
             <tbody>{rows_html}</tbody>
@@ -309,20 +305,20 @@ def render():
         </div>""", unsafe_allow_html=True)
 
     with col_archive:
-        st.markdown("### 📡 Signal Archive")
+        st.markdown("### ▸ Signal Archive")
         if len(signal_archive) > 0:
             archive = signal_archive.sort_values("signal_date", ascending=False).head(10)
             rows_html = ""
             for _, a in archive.iterrows():
                 rows_html += f"""
                 <tr style="border-bottom:1px solid #1e2530;">
-                    <td style="padding:6px; font-size:11px;">{market_badge(a['market'])}</td>
-                    <td style="padding:6px; color:#7a8599; font-size:11px;">{fmt_date_short(a['signal_date'])}</td>
-                    <td style="padding:6px; color:#e2e8f0; font-weight:500; font-size:12px;">{a['name']}</td>
+                    <td style="padding:6px; font-size:11px; text-align:center;">{market_badge(a['market'])}</td>
+                    <td style="padding:6px; color:#7a8599; font-size:11px; text-align:center;">{fmt_date_short(a['signal_date'])}</td>
+                    <td style="padding:6px; color:#e2e8f0; font-weight:500; font-size:12px; text-align:left;">{a['name']}</td>
                     <td style="padding:6px; color:#e2e8f0; text-align:right; font-size:11px;">{a['gap_rate']:.1f}%</td>
                     <td style="padding:6px; color:#14b8a6; text-align:right; font-size:11px;">{a['target_rate']:.1f}%</td>
                     <td style="padding:6px; color:#e2e8f0; text-align:right; font-size:11px;">{a['progress_pct']:.0f}%</td>
-                    <td style="padding:6px; color:#7a8599; text-align:right; font-size:11px;">{a['days_elapsed']}일</td>
+                    <td style="padding:6px; color:#7a8599; text-align:center; font-size:11px;">{a['days_elapsed']}일</td>
                     <td style="padding:6px; text-align:center; font-size:11px;">{archive_result_badge(a['archive_result'])}</td>
                 </tr>"""
 
@@ -331,13 +327,13 @@ def render():
             <table style="width:100%; border-collapse:collapse; font-size:12px; font-variant-numeric:tabular-nums; white-space:nowrap;">
                 <thead>
                     <tr style="border-bottom:2px solid #1e2530; background:#111820;">
-                        <th style="padding:6px; color:#7a8599; text-align:left;">시장</th>
-                        <th style="padding:6px; color:#7a8599; text-align:left;">Sig.날짜</th>
+                        <th style="padding:6px; color:#7a8599; text-align:center;">시장</th>
+                        <th style="padding:6px; color:#7a8599; text-align:center;">날짜</th>
                         <th style="padding:6px; color:#7a8599; text-align:left;">종목</th>
                         <th style="padding:6px; color:#7a8599; text-align:right;">갭%</th>
                         <th style="padding:6px; color:#7a8599; text-align:right;">목표율</th>
                         <th style="padding:6px; color:#7a8599; text-align:right;">진행율</th>
-                        <th style="padding:6px; color:#7a8599; text-align:right;">소요일</th>
+                        <th style="padding:6px; color:#7a8599; text-align:center;">소요일</th>
                         <th style="padding:6px; color:#7a8599; text-align:center;">결과</th>
                     </tr>
                 </thead>

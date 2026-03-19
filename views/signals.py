@@ -1,4 +1,4 @@
-"""📡 시그널 — 확장 카드, 프리뷰, 톤다운 아이콘, 단일색 차트, 실패MA 패턴"""
+"""◉ 시그널 — 톤다운 아이콘, 강 시그널 팝업 수정, 날짜 표기 제거, 3배 간격"""
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -9,7 +9,7 @@ def render():
     signals = st.session_state.signals
     trades = st.session_state.trades
 
-    st.markdown("### 📡 시그널 & 워치리스트")
+    st.markdown("### ▸ 시그널 & 워치리스트")
 
     # ── 요약 KPI (마우스오버 프리뷰 포함) ──────────────
     total_sig = len(signals)
@@ -20,14 +20,15 @@ def render():
     completed = trades[trades["result"].isin(["승", "패"])]
 
     def _signal_preview(strength_label):
-        """해당 강도 시그널의 최근 거래 프리뷰"""
-        # 과거 매매에서 해당 등급과 비슷한 종목 찾기
-        if strength_label == "강":
-            sub = completed[completed.get("grade", pd.Series()) == "A"] if "grade" in completed.columns else completed.head(5)
-        elif strength_label == "중":
-            sub = completed[completed.get("grade", pd.Series()) == "B"] if "grade" in completed.columns else completed.head(5)
+        """해당 강도 시그널의 최근 거래 프리뷰 — 매수일자 기준, 날짜 표기 없음"""
+        # 등급 기준으로 과거 매매 필터링 (강=A, 중=B, 약=C)
+        grade_map = {"강": "A", "중": "B", "약": "C"}
+        target_grade = grade_map.get(strength_label, "")
+
+        if "grade" in completed.columns and target_grade:
+            sub = completed[completed["grade"] == target_grade]
         else:
-            sub = completed[completed.get("grade", pd.Series()) == "C"] if "grade" in completed.columns else completed.head(5)
+            sub = completed.head(5)
 
         sub = sub.sort_values("date", ascending=False).head(5)
         if len(sub) == 0:
@@ -37,14 +38,12 @@ def render():
         for _, r in sub.iterrows():
             tgt_str = f"{r.get('target_rate', 0):.1f}%" if pd.notna(r.get("target_rate")) else "-"
             rows += f"""<tr style='border-bottom:1px solid #1e2530;'>
-                <td style='padding:2px 4px; color:#7a8599; font-size:10px;'>{fmt_date_short(r['date'])}</td>
                 <td style='padding:2px 4px; color:#e2e8f0; font-size:10px;'>{r['name']}</td>
                 <td style='padding:2px 4px; color:#14b8a6; font-size:10px; text-align:right;'>{tgt_str}</td>
             </tr>"""
 
         return f"""<table style='width:100%; border-collapse:collapse;'>
             <thead><tr style='border-bottom:1px solid #2a3545;'>
-                <th style='padding:2px 4px; color:#7a8599; font-size:9px;'>날짜</th>
                 <th style='padding:2px 4px; color:#7a8599; font-size:9px;'>종목</th>
                 <th style='padding:2px 4px; color:#7a8599; font-size:9px; text-align:right;'>목표율</th>
             </tr></thead><tbody>{rows}</tbody></table>"""
@@ -84,7 +83,6 @@ def render():
         strength_colors = {"강": "#22c55e", "중": "#eab308", "약": "#ef4444"}
         s_color = strength_colors.get(s["strength"], "#7a8599")
 
-        # 거리 계산
         dist_target = ((s["target_price"] - s["current_price"]) / s["current_price"] * 100)
         dist_stop = ((s["current_price"] - s["stop_price"]) / s["current_price"] * 100)
 
@@ -94,7 +92,6 @@ def render():
         # 톤다운 아이콘
         vol_icon = '<span style="color:#4a5568;">▲</span>' if s["volume_spike"] else '<span style="color:#2a3545;">▽</span>'
 
-        # 확장 필드 가져오기
         grade = s.get("grade", "-") or "-"
         tgt_rate = s.get("target_rate", 0)
         stp_rate = s.get("stop_rate", 0)
@@ -110,7 +107,7 @@ def render():
         g_color = grade_colors.get(grade, "#7a8599")
 
         st.markdown(f"""
-        <div style="background:#111820; border:1px solid #1e2530; border-radius:10px; padding:16px; margin-bottom:10px;">
+        <div style="background:#111820; border:1px solid #1e2530; border-radius:10px; padding:16px; margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span style="color:#e2e8f0; font-weight:600; font-size:15px;">{s['name']}</span>
@@ -195,7 +192,7 @@ def render():
     col_success, col_fail = st.columns(2)
 
     with col_success:
-        st.markdown("#### 🏆 고승률 MA 패턴")
+        st.markdown("#### ▸ 고승률 MA 패턴")
         ma_stats = completed.groupby("ma_pattern").agg(
             count=("result", "count"),
             wins=("result", lambda x: (x == "승").sum()),
@@ -206,7 +203,7 @@ def render():
         for _, m in ma_success.iterrows():
             bar_w = min(m["win_rate"], 100)
             st.markdown(f"""
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
                 <span style="color:#7a8599; font-size:10px; min-width:200px;">{m['ma_pattern']}</span>
                 <div style="flex:1; background:#1e2530; border-radius:4px; height:8px; overflow:hidden;">
                     <div style="background:#14b8a6; width:{bar_w}%; height:100%; border-radius:4px;"></div>
@@ -216,8 +213,7 @@ def render():
             </div>""", unsafe_allow_html=True)
 
     with col_fail:
-        st.markdown("#### ⚠️ 실패 MA 패턴 (하락추세)")
-        # 실패 패턴: 패배 거래의 매도시점 MA 패턴
+        st.markdown("#### ▸ 실패 MA 패턴 (하락추세)")
         if "sell_ma" in completed.columns:
             fail_trades = completed[completed["result"] == "패"]
             if len(fail_trades) > 0 and fail_trades["sell_ma"].notna().any():
@@ -227,9 +223,9 @@ def render():
                 fail_ma = fail_ma[fail_ma["sell_ma"] != ""].sort_values("count", ascending=False).head(5)
 
                 for _, m in fail_ma.iterrows():
-                    bar_w = min(m["count"] * 20, 100)  # 스케일
+                    bar_w = min(m["count"] * 20, 100)
                     st.markdown(f"""
-                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
                         <span style="color:#7a8599; font-size:10px; min-width:200px;">{m['sell_ma']}</span>
                         <div style="flex:1; background:#1e2530; border-radius:4px; height:8px; overflow:hidden;">
                             <div style="background:#ef4444; width:{bar_w}%; height:100%; border-radius:4px;"></div>

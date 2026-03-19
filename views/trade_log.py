@@ -1,4 +1,4 @@
-"""📋 매매 기록 — 확장 컬럼, 하이라이트, 잉 뱃지, 2자리 연도, MA(매도), 개선된 달력"""
+"""▤ 매매 기록 — 톤다운 아이콘, 정렬 통일, 등급A 종목 음영, 뱃지 축소"""
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -10,7 +10,7 @@ import calendar
 def render():
     trades = st.session_state.trades.copy()
 
-    st.markdown("### 📋 매매 기록")
+    st.markdown("### ▸ 매매 기록")
 
     # ── 필터 행 (7열) ──────────────────────────────────
     fc1, fc2, fc3, fc4, fc5, fc6, fc7 = st.columns(7)
@@ -79,7 +79,8 @@ def render():
     in_progress = len(trades[trades["result"] == "잉"])
     st.markdown(f"총 {len(filtered)}건 / {len(trades)}건 (진행중: :blue[{in_progress}건])")
 
-    # ── 거래 테이블 (확장 컬럼 순서) ──────────────────
+    # ── 거래 테이블 (정렬 통일 + 등급A 음영) ──────────────
+    # 정렬 규칙: 시장/날짜/손익비/소요일=가운데, 종목=좌측, 갭/목표/진행/수익=우측, MA=좌측
     show_sell_ma = result_filter in ["승", "패"]
     has_ev = "expected_value" in filtered.columns
     has_target_rate = "target_rate" in filtered.columns
@@ -105,38 +106,43 @@ def render():
         sell_ma_cell = ""
         if show_sell_ma:
             sell_ma = r.get("sell_ma", "") or ""
-            sell_ma_cell = f'<td style="padding:6px 4px;color:#a78bfa;font-size:10px;">{sell_ma}</td>'
+            sell_ma_cell = f'<td style="padding:6px 4px;color:#a78bfa;font-size:10px;text-align:left;">{sell_ma}</td>'
+
+        # 등급 A일 경우 종목명에 빨간색 투명도 30% 음영처리
+        name_style = 'padding:6px 4px;color:#e2e8f0;font-weight:500;font-size:12px;text-align:left;'
+        if grade == "A":
+            name_style += 'background:rgba(239,68,68,0.30);border-radius:3px;'
 
         rows_html.append(
             f'<tr style="border-bottom:1px solid #1e2530;">'
-            f'<td style="padding:6px 4px;font-size:11px;">{market_badge(r["market"])}</td>'
-            f'<td style="padding:6px 4px;color:#7a8599;font-size:11px;">{date_str}</td>'
-            f'<td style="padding:6px 4px;color:#e2e8f0;font-weight:500;font-size:12px;">{r["name"]}</td>'
-            f'<td style="padding:6px 4px;color:#7a8599;font-size:10px;">{r["code"]}</td>'
-            f'<td style="padding:6px 4px;color:{g_color};font-weight:600;font-size:11px;">{grade}</td>'
+            f'<td style="padding:6px 4px;font-size:11px;text-align:center;">{market_badge(r["market"])}</td>'
+            f'<td style="padding:6px 4px;color:#7a8599;font-size:11px;text-align:center;">{date_str}</td>'
+            f'<td style="{name_style}">{r["name"]}</td>'
+            f'<td style="padding:6px 4px;color:#7a8599;font-size:10px;text-align:left;">{r["code"]}</td>'
+            f'<td style="padding:6px 4px;color:{g_color};font-weight:600;font-size:11px;text-align:center;">{grade}</td>'
             f'<td style="padding:6px 4px;color:#e2e8f0;text-align:right;font-size:11px;">{r["gap_rate"]:.1f}%</td>'
             f'<td style="padding:6px 4px;color:#e2e8f0;text-align:right;font-size:11px;">₩{r["entry_price"]:,}</td>'
             f'<td class="hl" style="padding:6px 4px;color:#14b8a6;text-align:right;font-size:11px;font-weight:600;">{tgt_rate}</td>'
             f'<td style="padding:6px 4px;color:#14b8a6;text-align:right;font-size:11px;">₩{r["target_price"]:,}</td>'
             f'<td style="padding:6px 4px;color:#ef4444;text-align:right;font-size:11px;">₩{r["stop_price"]:,}</td>'
             f'<td style="padding:6px 4px;color:#ef4444;text-align:right;font-size:11px;">{stp_rate}</td>'
-            f'<td class="hl" style="padding:6px 4px;color:{rr_color};text-align:right;font-size:11px;font-weight:600;">{rr_str}</td>'
+            f'<td class="hl" style="padding:6px 4px;color:{rr_color};text-align:center;font-size:11px;font-weight:600;">{rr_str}</td>'
             f'<td class="hl" style="padding:6px 4px;color:{ev_color};text-align:right;font-size:11px;font-weight:600;">{ev_str}</td>'
             f'<td style="padding:6px 4px;color:{peak_color};text-align:right;font-size:11px;font-weight:600;">{r["peak_pct"]:+.1f}%</td>'
             f'<td style="padding:6px 4px;color:{low_color};text-align:right;font-size:11px;">{r["min_low_pct"]:+.1f}%</td>'
             f'<td style="padding:6px 4px;text-align:center;font-size:11px;">{res_badge}</td>'
-            f'<td style="padding:6px 4px;color:#7a8599;text-align:right;font-size:11px;">{r["days_to_target"]}일</td>'
-            f'<td style="padding:6px 4px;color:#7a8599;font-size:9px;">{r["ma_pattern"]}</td>'
+            f'<td style="padding:6px 4px;color:#7a8599;text-align:center;font-size:11px;">{r["days_to_target"]}일</td>'
+            f'<td style="padding:6px 4px;color:#7a8599;font-size:9px;text-align:left;">{r["ma_pattern"]}</td>'
             f'{sell_ma_cell}'
-            f'<td style="padding:6px 4px;color:#7a8599;font-size:11px;">{r["sector"]}</td>'
+            f'<td style="padding:6px 4px;color:#7a8599;font-size:11px;text-align:left;">{r["sector"]}</td>'
             f'</tr>'
         )
 
     sell_ma_header = '<th style="padding:6px 4px;color:#a78bfa;text-align:left;font-size:11px;">MA(매도)</th>' if show_sell_ma else ""
 
-    # 테이블 높이 계산 (헤더 40px + 행당 36px + 여유 20px)
+    # 테이블 높이 계산
     table_height = 40 + len(filtered) * 36 + 20
-    table_height = min(table_height, 800)  # 최대 800px
+    table_height = min(table_height, 800)
 
     table_css = """
     <style>
@@ -144,10 +150,10 @@ def render():
     .badge-win{background:#22c55e22;color:#22c55e;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
     .badge-lose{background:#ef444422;color:#ef4444;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
     .badge-ing{background:#3b82f622;color:#3b82f6;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:700;}
-    .badge-kospi{background:#3b82f622;color:#3b82f6;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
-    .badge-kosdaq{background:#8b5cf622;color:#a78bfa;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
-    .badge-nasdaq{background:#14b8a622;color:#14b8a6;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
-    .badge-btc{background:#eab30822;color:#eab308;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;}
+    .badge-kospi{background:#3b82f622;color:#3b82f6;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;}
+    .badge-kosdaq{background:#8b5cf622;color:#a78bfa;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;}
+    .badge-nasdaq{background:#14b8a622;color:#14b8a6;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;}
+    .badge-btc{background:#eab30822;color:#eab308;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;}
     .hl{background:rgba(20,184,166,0.06);}
     table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap;}
     thead tr{border-bottom:2px solid #1e2530;background:#111820;}
@@ -160,23 +166,23 @@ def render():
         + '<div style="overflow-x:auto;border:1px solid #1e2530;border-radius:8px;background:#0a0e14;">'
         + '<table>'
         + '<thead><tr>'
-        + '<th style="text-align:left;">시장</th>'
-        + '<th style="text-align:left;">날짜</th>'
+        + '<th style="text-align:center;">시장</th>'
+        + '<th style="text-align:center;">날짜</th>'
         + '<th style="text-align:left;">종목</th>'
         + '<th style="text-align:left;">코드</th>'
-        + '<th style="text-align:left;">등급</th>'
+        + '<th style="text-align:center;">등급</th>'
         + '<th style="text-align:right;">갭</th>'
         + '<th style="text-align:right;">진입가</th>'
         + '<th class="hl" style="color:#14b8a6;text-align:right;font-weight:600;">목표율</th>'
         + '<th style="text-align:right;">목표가</th>'
         + '<th style="text-align:right;">손절가</th>'
         + '<th style="text-align:right;">손절율</th>'
-        + '<th class="hl" style="color:#14b8a6;text-align:right;font-weight:600;">손익비</th>'
+        + '<th class="hl" style="color:#14b8a6;text-align:center;font-weight:600;">손익비</th>'
         + '<th class="hl" style="color:#14b8a6;text-align:right;font-weight:600;">기대값</th>'
         + '<th style="text-align:right;">최고</th>'
         + '<th style="text-align:right;">최저</th>'
         + '<th style="text-align:center;">결과</th>'
-        + '<th style="text-align:right;">소요일</th>'
+        + '<th style="text-align:center;">소요일</th>'
         + '<th style="text-align:left;">MA</th>'
         + sell_ma_header
         + '<th style="text-align:left;">섹터</th>'
@@ -191,14 +197,12 @@ def render():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── 거래 달력 (개선된 월별 달력 뷰) ──────────────────
-    st.markdown("#### 📅 거래 달력")
+    st.markdown("#### ▸ 거래 달력")
 
-    # 월별 그룹핑
     cal_data = trades.copy()
     cal_data["month"] = cal_data["date"].dt.to_period("M")
     months = sorted(cal_data["month"].unique(), reverse=True)
 
-    # 최근 3개월 표시
     display_months = months[:3]
     cal_cols = st.columns(len(display_months))
 
@@ -210,14 +214,12 @@ def render():
             st.markdown(f"<div style='color:#e2e8f0; font-size:13px; font-weight:600; margin-bottom:8px; text-align:center;'>{month_str}</div>",
                         unsafe_allow_html=True)
 
-            # 요일 헤더
             dow_header = "".join(
                 f"<span style='display:inline-block; width:28px; text-align:center; color:#7a8599; font-size:10px; margin:1px;'>{d}</span>"
                 for d in ["월", "화", "수", "목", "금", "토", "일"]
             )
             st.markdown(f"<div style='text-align:center;'>{dow_header}</div>", unsafe_allow_html=True)
 
-            # 월 데이터
             month_trades = cal_data[cal_data["month"] == month_period]
             trade_dates = {}
             for _, t in month_trades.iterrows():
@@ -226,7 +228,6 @@ def render():
                     trade_dates[d] = []
                 trade_dates[d].append(t["result"])
 
-            # 달력 그리기
             cal_obj = calendar.monthcalendar(year, month)
             cal_html = ""
             for week in cal_obj:
@@ -251,7 +252,6 @@ def render():
 
             st.markdown(f"<div style='text-align:center; line-height:1.8;'>{cal_html}</div>", unsafe_allow_html=True)
 
-            # 월별 요약
             w = len(month_trades[month_trades["result"] == "승"])
             l = len(month_trades[month_trades["result"] == "패"])
             p = len(month_trades[month_trades["result"] == "잉"])
