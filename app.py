@@ -33,7 +33,7 @@ h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
     min-height: 90 px;
 }
 .kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 6px; }
-.kpi-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi-value { font-size: 26 px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .kpi-sub { color: #7a8599; font-size: 11px; margin-top:2px; }
 .positive { color: #22c55e; }
 .negative { color: #ef4444; }
@@ -61,14 +61,14 @@ h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
 
 
 .dataframe { font-variant-numeric: tabular-nums !important; }
-div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; }
+div[data-testid="stDataFrame"] { border: 1 px solid #1e2530; border-radius: 8px; }
 
 
 .logo-box {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 0 16px 0; border-bottom: 1px solid #1e2530; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10 px;
+    padding: 8 px 0 16 px 0; border-bottom: 1 px solid #1e2530; margin-bottom: 16px;
 }
-.logo-icon { font-size: 28px; }
+.logo-icon { font-size: 28 px; }
 .logo-title { color: #e2e8f0; font-size: 16px; font-weight: 700; }
 .logo-sub { color: #7a8599; font-size: 11px; }
 
@@ -82,10 +82,10 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
     position: absolute; z-index: 999;
     bottom: 110%; left: 50%; transform: translateX(-50%);
     background: #1a2233; border: 1px solid #2a3545;
-    border-radius: 8px; padding: 12px 14px;
-    min-width: 280px; max-width: 380px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    font-size: 11px; color: #e2e8f0;
+    border-radius: 8 px; padding: 12 px 14 px;
+    min-width: 280 px; max-width: 380 px;
+    box-shadow: 0 8 px 24 px rgba(0,0,0,0.5);
+    font-size: 11 px; color: #e2e8f0;
     transition: opacity 0.2s ease, visibility 0.2s ease;
     white-space: normal; line-height: 1.6;
 }
@@ -94,26 +94,26 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
 
 .info-tip {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 16px; height: 16px; border-radius: 50%;
+    width: 16 px; height: 16 px; border-radius: 50%;
     background: #1e2530; color: #7a8599; font-size: 10px;
-    cursor: help; margin-left: 6px; font-weight: 700;
-    border: 1px solid #2a3545;
+    cursor: help; margin-left: 6 px; font-weight: 700;
+    border: 1 px solid #2a3545;
 }
 .info-tip:hover + .info-content { visibility: visible; opacity: 1; }
 .info-content {
     visibility: hidden; opacity: 0;
     position: absolute; z-index: 999;
-    top: 28px; left: 0;
+    top: 28 px; left: 0;
     background: #1a2233; border: 1px solid #2a3545;
-    border-radius: 8px; padding: 12px 14px;
-    min-width: 260px; max-width: 360px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    font-size: 11px; color: #c0c8d8; line-height: 1.6;
+    border-radius: 8 px; padding: 12 px 14 px;
+    min-width: 260 px; max-width: 360 px;
+    box-shadow: 0 8 px 24 px rgba(0,0,0,0.5);
+    font-size: 11 px; color: #c0c8d8; line-height: 1.6;
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 
-.calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; font-size:11px; margin:1px; }
+.calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28 px; height:28 px; border-radius:6px; font-size:11px; margin:1px; }
 .cal-win { background:#22c55e33; color:#22c55e; font-weight:600; }
 .cal-lose { background:#ef444433; color:#ef4444; font-weight:600; }
 .cal-ing { background:#3b82f633; color:#3b82f6; font-weight:600; }
