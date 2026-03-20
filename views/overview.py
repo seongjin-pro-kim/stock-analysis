@@ -1,11 +1,9 @@
-"""🏠 메인 대시보드 — 지수차트, KPI, Best MA, 계좌별 자산추이, 최근매매+Signal Archive, 옵션만기"""
-
+import os
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 
-from utils import result_badge, market_badge, fmt_date_short, archive_result_badge, init_state, df_state
+from utils import init_state, df_state, result_badge, market_badge, fmt_date_short, archive_result_badge
 
 
 def _safe_num(x, default=0.0):
@@ -26,10 +24,6 @@ def _safe_int(x, default=0):
         return default
 
 
-def _mini_tag(text, bg, fg):
-    return f'<span style="display:inline-block;padding:2px 7px;border-radius:999px;background:{bg};color:{fg};font-size:10px;font-weight:700;">{text}</span>'
-
-
 def _panel(title, value, delta=None, color="#e2e8f0"):
     delta_html = ""
     if delta is not None:
@@ -45,10 +39,8 @@ def _panel(title, value, delta=None, color="#e2e8f0"):
 
 def render():
     init_state()
-
     trades = df_state("trades")
     equity = df_state("equity_curve")
-    positions = df_state("positions")
     signals = df_state("signals")
     signal_archive = df_state("signal_archive")
     idx = df_state("major_indices")
@@ -58,15 +50,6 @@ def render():
     st.markdown(
         """
         <style>
-        .section-title{
-            color:#e2e8f0;font-size:18px;font-weight:700;margin:6px 0 10px 0;
-        }
-        .subtle{
-            color:#7a8599;font-size:12px;
-        }
-        .card-wrap{
-            background:#0a0e14;border:1px solid #1e2530;border-radius:12px;padding:12px;
-        }
         .table-wrap{
             background:#0a0e14;border:1px solid #1e2530;border-radius:12px;overflow-x:auto;
         }
@@ -76,9 +59,6 @@ def render():
         .table-dark thead tr{border-bottom:2px solid #1e2530;background:#111820;}
         .table-dark th{padding:7px 6px;color:#7a8599;font-size:10px;font-weight:600;}
         .table-dark td{padding:7px 6px;border-bottom:1px solid #1e2530;}
-        .hl{background:rgba(20,184,166,0.06);}
-        .positive{color:#22c55e;}
-        .negative{color:#ef4444;}
         </style>
         """,
         unsafe_allow_html=True,
@@ -86,10 +66,10 @@ def render():
 
     st.markdown("#### ▸ 주요 시장 지표")
     idx_configs = [
-        {"name": "KOSPI", "value": 2685.42, "change": +12.35, "color": "#3b82f6"},
+        {"name": "KOSPI", "value": 2685.42, "change": 12.35, "color": "#3b82f6"},
         {"name": "KOSDAQ", "value": 872.15, "change": -3.21, "color": "#a855f7"},
-        {"name": "NASDAQ", "value": 18245.80, "change": +85.50, "color": "#14b8a6"},
-        {"name": "BTC", "value": 87420.50, "change": +1250.30, "color": "#eab308"},
+        {"name": "NASDAQ", "value": 18245.80, "change": 85.50, "color": "#14b8a6"},
+        {"name": "BTC", "value": 87420.50, "change": 1250.30, "color": "#eab308"},
     ]
     cols = st.columns(4)
     for c, cfg in zip(cols, idx_configs):
@@ -123,7 +103,7 @@ def render():
         fig.update_layout(
             template="plotly_dark",
             hovermode="x unified",
-            height=320,
+            height=340,
             margin=dict(l=20, r=20, t=20, b=20),
             paper_bgcolor="#0a0e14",
             plot_bgcolor="#0a0e14",
@@ -152,19 +132,16 @@ def render():
 
     st.markdown("#### ▸ 최근 매매")
     if not trades.empty:
-        show_cols = [c for c in ["market", "date", "name", "gap_rate", "target_rate", "rr_ratio", "result", "peak_pct", "days_to_target", "ma_pattern", "sector"] if c in trades.columns]
         recent = trades.copy()
         if "date" in recent.columns:
-            recent = recent.sort_values("date", ascending=False)
-        recent = recent.head(8)
+            recent = recent.sort_values("date", ascending=False).head(8)
 
         rows = []
         for _, r in recent.iterrows():
-            date_str = fmt_date_short(r.get("date"))
             rows.append(
                 "<tr>"
                 f"<td style='padding:6px 6px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
-                f"<td style='padding:6px 6px;color:#7a8599;text-align:center;font-size:10px;'>{date_str}</td>"
+                f"<td style='padding:6px 6px;color:#7a8599;text-align:center;font-size:10px;'>{fmt_date_short(r.get('date'))}</td>"
                 f"<td style='padding:6px 6px;color:#e2e8f0;font-weight:600;'>{r.get('name','-')}</td>"
                 f"<td style='padding:6px 6px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
                 f"<td style='padding:6px 6px;color:#14b8a6;text-align:right;font-weight:600;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
@@ -177,37 +154,72 @@ def render():
                 "</tr>"
             )
 
-        table = f"""
-        <div class="table-wrap">
-        <table class="table-dark">
-        <thead>
-        <tr>
-            <th style="text-align:center;">시장</th>
-            <th style="text-align:center;">날짜</th>
-            <th style="text-align:left;">종목</th>
-            <th style="text-align:right;">갭</th>
-            <th style="text-align:right;">목표율</th>
-            <th style="text-align:center;">손익비</th>
-            <th style="text-align:center;">결과</th>
-            <th style="text-align:right;">최고</th>
-            <th style="text-align:center;">소요일</th>
-            <th style="text-align:left;">MA</th>
-            <th style="text-align:left;">섹터</th>
-        </tr>
-        </thead>
-        <tbody>
-        {''.join(rows)}
-        </tbody>
-        </table>
-        </div>
-        """
-        st.markdown(table, unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div class="table-wrap">
+            <table class="table-dark">
+            <thead><tr>
+                <th style="text-align:center;">시장</th>
+                <th style="text-align:center;">날짜</th>
+                <th style="text-align:left;">종목</th>
+                <th style="text-align:right;">갭</th>
+                <th style="text-align:right;">목표율</th>
+                <th style="text-align:center;">손익비</th>
+                <th style="text-align:center;">결과</th>
+                <th style="text-align:right;">최고</th>
+                <th style="text-align:center;">소요일</th>
+                <th style="text-align:left;">MA</th>
+                <th style="text-align:left;">섹터</th>
+            </tr></thead>
+            <tbody>{''.join(rows)}</tbody>
+            </table>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         st.info("최근 매매 데이터가 없습니다.")
 
     st.markdown("#### ▸ Signal Archive")
     if not signal_archive.empty:
-        st.dataframe(signal_archive, use_container_width=True, hide_index=True)
+        rows = []
+        view = signal_archive.copy()
+        if "signal_date" in view.columns:
+            view["signal_date"] = pd.to_datetime(view["signal_date"], errors="coerce")
+            view = view.sort_values("signal_date", ascending=False).head(8)
+        for _, r in view.iterrows():
+            rows.append(
+                "<tr>"
+                f"<td style='padding:6px 6px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
+                f"<td style='padding:6px 6px;color:#7a8599;text-align:center;font-size:10px;'>{fmt_date_short(r.get('signal_date'))}</td>"
+                f"<td style='padding:6px 6px;color:#e2e8f0;font-weight:600;'>{r.get('name','-')}</td>"
+                f"<td style='padding:6px 6px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}</td>"
+                f"<td style='padding:6px 6px;color:#14b8a6;text-align:right;font-weight:600;'>{_safe_num(r.get('target_rate')):.1f}</td>"
+                f"<td style='padding:6px 6px;color:#22c55e;text-align:right;font-weight:600;'>{_safe_num(r.get('progress_pct')):.0f}%</td>"
+                f"<td style='padding:6px 6px;color:#7a8599;text-align:center;'>{_safe_int(r.get('days_elapsed'))}일</td>"
+                f"<td style='padding:6px 6px;text-align:center;'>{archive_result_badge(r.get('archive_result','-'))}</td>"
+                "</tr>"
+            )
+        st.markdown(
+            f"""
+            <div class="table-wrap">
+            <table class="table-dark">
+            <thead><tr>
+                <th style="text-align:center;">시장</th>
+                <th style="text-align:center;">날짜</th>
+                <th style="text-align:left;">종목</th>
+                <th style="text-align:right;">갭%</th>
+                <th style="text-align:right;">목표율</th>
+                <th style="text-align:right;">진행율</th>
+                <th style="text-align:center;">소요일</th>
+                <th style="text-align:center;">결과</th>
+            </tr></thead>
+            <tbody>{''.join(rows)}</tbody>
+            </table>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         st.info("Signal Archive 데이터가 없습니다.")
 
@@ -242,13 +254,10 @@ def render():
 
     st.markdown("#### ▸ 최근 시그널")
     if not signals.empty:
-        if "date" in signals.columns:
-            signals = signals.copy()
-            signals["date"] = pd.to_datetime(signals["date"], errors="coerce")
         view_cols = [c for c in ["date", "name", "signal_type", "strength", "ma_pattern", "sector"] if c in signals.columns]
+        if "date" in signals.columns:
+            signals["date"] = pd.to_datetime(signals["date"], errors="coerce")
+            signals = signals.sort_values("date", ascending=False)
         st.dataframe(signals[view_cols].head(8), use_container_width=True, hide_index=True)
     else:
         st.info("시그널 데이터가 없습니다.")
-
-    st.markdown("#### ▸ 옵션만기")
-    st.caption("옵션만기 캘린더/카운트다운은 추후 연동 가능")

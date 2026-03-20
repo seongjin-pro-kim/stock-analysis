@@ -1,7 +1,8 @@
 """공통 헬퍼 함수 (v2)"""
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 
 def fmt_krw(val):
     """원화 포맷"""
@@ -15,10 +16,12 @@ def fmt_krw(val):
         return f"₩{val/1e4:,.0f}만"
     return f"₩{val:,.0f}"
 
+
 def result_badge(r):
     """결과 뱃지 — 승/패/잉"""
     cls = {"승": "badge-win", "패": "badge-lose", "잉": "badge-ing", "진행": "badge-progress"}.get(str(r), "")
     return f'<span class="{cls}">{r}</span>'
+
 
 def market_badge(m):
     """시장 뱃지"""
@@ -31,12 +34,14 @@ def market_badge(m):
     cls = badge_map.get(str(m), "badge-kospi")
     return f'<span class="{cls}">{m}</span>'
 
+
 def fmt_date_short(dt):
-    """2자리 연도 날짜 포맷"""
+    """2자리 연도 날짜 포맷 (26-03-17)"""
     try:
         return pd.to_datetime(dt).strftime("%y-%m-%d")
     except Exception:
         return str(dt)
+
 
 def archive_result_badge(r):
     """시그널 아카이브 결과 뱃지"""
@@ -48,8 +53,9 @@ def archive_result_badge(r):
     cls, label = badge_map.get(str(r), ("", r))
     return f'<span class="{cls}">{label}</span>'
 
+
 def tooltip_html(title, content):
-    """마우스오버 툴팁 박스"""
+    """마우스오버 툴팁 박스 (CSS hover 기반)"""
     return f"""
     <div style="position:relative;display:inline-block;">
         <span style="border-bottom:1px dotted #999;cursor:help;">{title}</span>
@@ -58,6 +64,7 @@ def tooltip_html(title, content):
         </div>
     </div>
     """
+
 
 def init_state():
     defaults = {
@@ -68,10 +75,12 @@ def init_state():
         "signal_archive": [],
         "major_indices": [],
         "risk_metrics": {},
+        "sector_overview": [],
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
+
 
 def df_state(key):
     v = st.session_state.get(key, [])

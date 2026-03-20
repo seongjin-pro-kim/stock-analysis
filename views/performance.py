@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-from utils import fmt_date_short, init_state, df_state, result_badge, market_badge
+from utils import init_state, df_state, fmt_date_short, result_badge, market_badge
 
 
 def _safe_num(x, default=0.0):
@@ -40,7 +40,7 @@ def _html_table(df):
         grade_bg = {"A": "rgba(34,197,94,0.14)", "B": "rgba(234,179,8,0.14)", "C": "rgba(239,68,68,0.14)"}.get(grade, "rgba(122,133,153,0.14)")
         grade_fg = {"A": "#22c55e", "B": "#eab308", "C": "#ef4444"}.get(grade, "#7a8599")
         result = str(r.get("result", "-") or "-")
-        result_bg = {"승": "rgba(34,197,94,0.14)", "패": "rgba(239,68,68,0.14)", "잉": "rgba(59,130,246,0.14)"}.get(result, "rgba(122,133,153,0.14)")
+        result_bg = {"승": "rgba(34,197,94,0.14)", "패": "rgba(127,29,29,0.28)", "잉": "rgba(59,130,246,0.14)"}.get(result, "rgba(122,133,153,0.14)")
         result_fg = {"승": "#22c55e", "패": "#ef4444", "잉": "#3b82f6"}.get(result, "#7a8599")
 
         rows.append(
@@ -70,7 +70,7 @@ def _html_table(df):
     show_sell_ma = "sell_ma" in df.columns
     sell_ma_header = "<th style='padding:6px 4px;color:#a78bfa;text-align:left;font-size:10px;'>MA(매도)</th>" if show_sell_ma else ""
 
-    html = f"""
+    return f"""
     <style>
     .perf-wrap{{background:#0a0e14;border:1px solid #1e2530;border-radius:12px;overflow-x:auto;}}
     .perf-table{{width:100%;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11px;}}
@@ -110,13 +110,10 @@ def _html_table(df):
       </table>
     </div>
     """
-    return html
 
 
 def render():
     init_state()
-    st.markdown("### ▸ 매매 성과 분석")
-
     trades = df_state("trades")
     if trades.empty:
         st.info("데이터가 없습니다.")
@@ -125,34 +122,39 @@ def render():
     if "date" in trades.columns:
         trades["date"] = pd.to_datetime(trades["date"], errors="coerce")
 
-    c1, c2, c3, c4 = st.columns(4)
-    win_cnt = int((trades["result"] == "승").sum()) if "result" in trades.columns else 0
-    lose_cnt = int((trades["result"] == "패").sum()) if "result" in trades.columns else 0
-    ing_cnt = int((trades["result"] == "잉").sum()) if "result" in trades.columns else 0
-    total_cnt = len(trades)
-    win_rate = (win_cnt / max(win_cnt + lose_cnt, 1)) * 100 if (win_cnt + lose_cnt) else 0
-
-    c1.metric("총 매매", f"{total_cnt}건")
-    c2.metric("승/패", f"{win_cnt}/{lose_cnt}")
-    c3.metric("진행중", f"{ing_cnt}건")
-    c4.metric("승률", f"{win_rate:.1f}%")
-
+    st.markdown("### ▸ 매매 성과 분석")
     st.markdown(
         """
-        <div style="margin:8px 0 10px 0;color:#7a8599;font-size:12px;">
-        수익 인자: RR, 기대값, MA 패턴, 섹터, 보유기간 기준으로 성과를 해석합니다.
-        </div>
+        <style>
+        .perf-kpi{
+            background:#0f141b;border:1px solid #1e2530;border-radius:12px;padding:14px 14px 12px 14px;
+        }
+        .perf-sub{
+            color:#7a8599;font-size:12px;margin:6px 0 10px 0;
+        }
+        </style>
         """,
         unsafe_allow_html=True,
     )
 
+    total_cnt = len(trades)
+    win_cnt = int((trades["result"] == "승").sum()) if "result" in trades.columns else 0
+    lose_cnt = int((trades["result"] == "패").sum()) if "result" in trades.columns else 0
+    ing_cnt = int((trades["result"] == "잉").sum()) if "result" in trades.columns else 0
+    win_rate = (win_cnt / max(win_cnt + lose_cnt, 1)) * 100 if (win_cnt + lose_cnt) else 0
+    rr_avg = _safe_num(trades["rr_ratio"].mean()) if "rr_ratio" in trades.columns else 0.0
+    ev_avg = _safe_num(trades["expected_value"].mean()) if "expected_value" in trades.columns else 0.0
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">총 매매</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{total_cnt}건</div></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">승/패</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{win_cnt}/{lose_cnt}</div></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">진행중</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{ing_cnt}건</div></div>', unsafe_allow_html=True)
+    c4.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">승률</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{win_rate:.1f}%</div></div>', unsafe_allow_html=True)
+
+    st.markdown(f'<div class="perf-sub">수익 인자: RR, 기대값, MA 패턴, 섹터, 보유기간 기준으로 성과를 해석합니다. / RR 평균 {rr_avg:.2f}, 기대값 {ev_avg:.1f}</div>', unsafe_allow_html=True)
+
     fig = go.Figure()
-
-    has_result = "result" in trades.columns
-    has_profit = "profit_pct" in trades.columns
-    has_equity = "equity" in trades.columns
-
-    if has_profit and has_result:
+    if "profit_pct" in trades.columns and "result" in trades.columns:
         win = trades[trades["result"] == "승"]
         lose = trades[trades["result"] == "패"]
 
@@ -173,7 +175,7 @@ def render():
                 hovertemplate="날짜: %{x|%m/%d}<br>수익: %{y:.2f}%<extra></extra>",
             ))
 
-    if has_equity:
+    if "equity" in trades.columns:
         fig.add_trace(go.Scatter(
             x=trades["date"],
             y=trades["equity"],
