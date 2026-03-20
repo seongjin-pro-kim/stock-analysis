@@ -1,57 +1,11 @@
-<<<<<<< HEAD
-"""공통 헬퍼 함수 (v2)"""
-=======
 import streamlit as st
 import plotly.io as pio
->>>>>>> 259691f (style: unify dashboard theme)
 
 DARK_AIRY_PALETTE = [
     "#3B82F6", "#4F86FF", "#5B8CFF", "#6A94FF", "#7A9BFF",
     "#8AA3FF", "#9AAAFE", "#A9B2FE", "#B7BAFF", "#C4C2FF",
 ]
 
-<<<<<<< HEAD
-def result_badge(r):
-    """결과 뱃지 — 승/패/잉"""
-    cls = {"승": "badge-win", "패": "badge-lose", "잉": "badge-ing", "진행": "badge-progress"}.get(r, "")
-    return f'<span class="{cls}">{r}</span>'
-
-def market_badge(m):
-    """시장 뱃지"""
-    badge_map = {
-        "KOSPI": "badge-kospi",
-        "KOSDAQ": "badge-kosdaq",
-        "NASDAQ": "badge-nasdaq",
-        "BTC": "badge-btc",
-    }
-    cls = badge_map.get(m, "badge-kospi")
-    return f'<span class="{cls}">{m}</span>'
-
-def fmt_date_short(dt):
-    """2자리 연도 날짜 포맷 (26-03-17)"""
-    try:
-        return dt.strftime("%y-%m-%d")
-    except Exception:
-        return str(dt)
-
-def archive_result_badge(r):
-    """시그널 아카이브 결과 뱃지"""
-    badge_map = {
-        "Success": ("badge-win", "Success"),
-        "Drop": ("badge-lose", "Drop"),
-        "Continue": ("badge-ing", "Continue"),
-    }
-    cls, label = badge_map.get(r, ("", r))
-    return f'<span class="{cls}">{label}</span>'
-
-def tooltip_html(title, content):
-    """마우스오버 툴팁 박스 (CSS hover 기반)"""
-    return f"""
-    <div class="tooltip-wrapper">
-        <span class="tooltip-trigger">{title}</span>
-        <div class="tooltip-box">{content}</div>
-    </div>"""
-=======
 MA_COLORS = {
     "MA5": "#ff5fa2",
     "MA20": "#0f3b7a",
@@ -113,10 +67,13 @@ def setup_theme():
     .positive { color: #2dd4bf; }
     .negative { color: #fb7185; }
     .neutral { color: #60a5fa; }
-    .logo-box { display:flex; align-items:center; gap:10px; padding:8px 0 16px 0; border-bottom:1px solid var(--line); margin-bottom:16px; }
-    .logo-icon { font-size:28px; }
-    .logo-title { color: var(--text); font-size:16px; font-weight:700; }
-    .logo-sub { color: var(--muted); font-size:11px; }
+    .logo-box {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 0 16px 0; border-bottom: 1px solid var(--line); margin-bottom: 16px;
+    }
+    .logo-icon { font-size: 28px; }
+    .logo-title { color: var(--text); font-size: 16px; font-weight: 700; }
+    .logo-sub { color: var(--muted); font-size: 11px; }
     [data-testid="stMetric"] {
         background: var(--panel);
         border: 1px solid var(--line);
@@ -149,4 +106,3 @@ def market_badge(market):
     if "KOSDAQ" in m:
         return '<span class="badge-kosdaq">KOSDAQ</span>'
     return f'<span class="badge-progress">{market}</span>'
->>>>>>> 259691f (style: unify dashboard theme)
