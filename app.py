@@ -19,10 +19,10 @@ st.set_page_config(
 setup_theme()
 
 <<<<<<< HEAD
-/* ── 섹션 간격 3배 (h3/h4 기준) ── */
+
 h3, h4 { margin-top: 2.4em !important; margin-bottom: 0.6em !important; }
 
-/* KPI 카드 — 균일 사이즈 */
+
 .kpi-card {
     background: #111820;
     border: 1px solid #1e2530;
@@ -39,31 +39,31 @@ h3, h4 { margin-top: 2.4em !important; margin-bottom: 0.6em !important; }
 .negative { color: #ef4444; }
 .neutral { color: #14b8a6; }
 
-/* 결과 뱃지 */
+
 .badge-win { background:#22c55e22; color:#22c55e; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
 .badge-lose { background:#ef444422; color:#ef4444; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
 .badge-progress { background:#eab30822; color:#eab308; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
 .badge-ing { background:#3b82f622; color:#3b82f6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; }
-/* 시장 뱃지 — 50% 축소 */
+
 .badge-kospi { background:#3b82f622; color:#3b82f6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
 .badge-kosdaq { background:#8b5cf622; color:#a78bfa; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
 .badge-nasdaq { background:#14b8a622; color:#14b8a6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
 .badge-btc { background:#eab30822; color:#eab308; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
 
-/* 등급 A 종목 행 하이라이트 */
+
 .grade-a-row { background: rgba(239, 68, 68, 0.30) !important; }
 
-/* 하이라이트 열 (목표율/손익비/기대값) */
+
 .highlight-cell { background: rgba(20,184,166,0.06); }
 
-/* 섹션 헤더 — 톤다운 아이콘 색상 */
+
 .section-header { color: #e2e8f0; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
 
-/* 테이블 스타일 */
+
 .dataframe { font-variant-numeric: tabular-nums !important; }
 div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; }
 
-/* 사이드바 로고 */
+
 .logo-box {
     display: flex; align-items: center; gap: 10px;
     padding: 8px 0 16px 0; border-bottom: 1px solid #1e2530; margin-bottom: 16px;
@@ -72,10 +72,10 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
 .logo-title { color: #e2e8f0; font-size: 16px; font-weight: 700; }
 .logo-sub { color: #7a8599; font-size: 11px; }
 
-/* metric 숨기기 (기본 스타일 덮어쓰기) */
+
 [data-testid="stMetric"] { background: #111820; border: 1px solid #1e2530; border-radius: 10px; padding: 12px 16px; }
 
-/* 툴팁 (마우스오버 프리뷰) */
+
 .tooltip-wrapper { position: relative; display: inline-block; cursor: pointer; }
 .tooltip-box {
     visibility: hidden; opacity: 0;
@@ -91,7 +91,7 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
 }
 .tooltip-wrapper:hover .tooltip-box { visibility: visible; opacity: 1; }
 
-/* 정보 툴팁 아이콘 */
+
 .info-tip {
     display: inline-flex; align-items: center; justify-content: center;
     width: 16px; height: 16px; border-radius: 50%;
@@ -112,7 +112,7 @@ div[data-testid="stDataFrame"] { border: 1px solid #1e2530; border-radius: 8px; 
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
-/* 달력 개선 */
+
 .calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; font-size:11px; margin:1px; }
 .cal-win { background:#22c55e33; color:#22c55e; font-weight:600; }
 .cal-lose { background:#ef444433; color:#ef4444; font-weight:600; }
