@@ -109,7 +109,7 @@ div[data-testid="stDataFrame"] { border: 1 px solid #1e2530; border-radius: 8px;
     min-width: 260 px; max-width: 360 px;
     box-shadow: 0 8 px 24 px rgba(0,0,0,0.5);
     font-size: 11 px; color: #c0c8d8; line-height: 1.6;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transition: opacity 0.2 s ease, visibility 0.2 s ease;
 }
 
 
