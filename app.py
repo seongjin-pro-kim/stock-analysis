@@ -45,8 +45,8 @@ st.markdown(
 
     /* 섹션 간격만 넓힘 */
     .stMarkdown, .stDataFrame, .stPlotlyChart, .stMetric, .element-container {
-        margin-top: 1.5rem !important;
-        margin-bottom: 1.5rem !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
     }
 
     /* 행간은 원래대로 */
