@@ -128,7 +128,7 @@ import os
 _CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_etc", "trades_enriched_v1.csv")
 
 =======
->>>>>>> 259691f (style: unify dashboard theme)
+#259691f (style: unify dashboard theme)
 if "trades" not in st.session_state:
     if os.path.exists(_CSV_PATH):
         st.session_state.trades = pd.read_csv(_CSV_PATH, encoding="utf-8-sig")
@@ -164,7 +164,7 @@ with st.sidebar:
          "◉ 시그널", "◎ 시장 개요", "△ 리스크", "▫ 데이터 관리"],
 =======
         ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록", "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
->>>>>>> 259691f (style: unify dashboard theme)
+#259691f (style: unify dashboard theme)
         label_visibility="collapsed",
     )
     st.divider()
@@ -180,7 +180,7 @@ from utils import fmt_krw, result_badge, market_badge
 from views import overview, performance, trade_log, signals, market, risk, data_mgmt
 
 =======
->>>>>>> 259691f (style: unify dashboard theme)
+#259691f (style: unify dashboard theme)
 if "메인 대시보드" in page:
     overview.render()
 elif "매매 성과" in page:
