@@ -6,8 +6,9 @@ from sample_data import (
     get_sample_positions, get_sample_signals,
     get_sample_signal_archive,
 )
+from utils import setup_theme
+from views import overview, performance, trade_log, signals, market, risk, data_mgmt
 
-# ── 페이지 설정 ──────────────────────────────────────────
 st.set_page_config(
     page_title="GAP R-Zone Dashboard",
     page_icon="📈",
@@ -15,16 +16,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── 다크 테마 CSS ────────────────────────────────────────
-st.markdown("""
-<style>
-/* 전역 다크 스타일 */
-[data-testid="stSidebar"] {
-    background-color: #0d1117;
-    border-right: 1px solid #1e2530;
-}
-.stApp { background-color: #0a0e14; }
+setup_theme()
 
+<<<<<<< HEAD
 /* ── 섹션 간격 3배 (h3/h4 기준) ── */
 h3, h4 { margin-top: 2.4em !important; margin-bottom: 0.6em !important; }
 
@@ -133,6 +127,8 @@ import os
 
 _CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_etc", "trades_enriched_v1.csv")
 
+=======
+>>>>>>> 259691f (style: unify dashboard theme)
 if "trades" not in st.session_state:
     if os.path.exists(_CSV_PATH):
         st.session_state.trades = pd.read_csv(_CSV_PATH, encoding="utf-8-sig")
@@ -153,29 +149,28 @@ if "signals" not in st.session_state:
 if "signal_archive" not in st.session_state:
     st.session_state.signal_archive = get_sample_signal_archive()
 
-
-# ── 사이드바 네비게이션 ──────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div class="logo-box">
-        <span class="logo-icon">📈</span>
-        <div>
-            <div class="logo-title">GAP R-Zone</div>
-            <div class="logo-sub">v6.5 Strategy</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(
+        '<div class="logo-box"><span class="logo-icon">📈</span>'
+        '<div><div class="logo-title">GAP R-Zone</div>'
+        '<div class="logo-sub">v6.5 Strategy</div></div></div>',
+        unsafe_allow_html=True
+    )
 
     page = st.radio(
         "메뉴",
+<<<<<<< HEAD
         ["◈ 메인 대시보드", "▦ 매매 성과", "▤ 매매 기록",
          "◉ 시그널", "◎ 시장 개요", "△ 리스크", "▫ 데이터 관리"],
+=======
+        ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록", "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
+>>>>>>> 259691f (style: unify dashboard theme)
         label_visibility="collapsed",
     )
-
     st.divider()
     st.caption("Created with Streamlit + Python")
 
+<<<<<<< HEAD
 
 # ── 공통 헬퍼 ────────────────────────────────────────────
 from utils import fmt_krw, result_badge, market_badge
@@ -184,6 +179,8 @@ from utils import fmt_krw, result_badge, market_badge
 # ── 페이지 라우팅 ────────────────────────────────────────
 from views import overview, performance, trade_log, signals, market, risk, data_mgmt
 
+=======
+>>>>>>> 259691f (style: unify dashboard theme)
 if "메인 대시보드" in page:
     overview.render()
 elif "매매 성과" in page:

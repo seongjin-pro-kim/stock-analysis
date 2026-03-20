@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 """▦ 매매 성과 분석 — 톤다운 아이콘, 개선된 프리뷰, 3배 행간격, 차트색상 변경"""
+=======
+>>>>>>> 259691f (style: unify dashboard theme)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -19,6 +22,27 @@ def _preview_table(items, cols, title=""):
         <thead><tr style='border-bottom:1px solid #2a3545;'>{header}</tr></thead>
         <tbody>{rows}</tbody></table>"""
 
+
+DARK_AIRY_PALETTE = [
+    "#3B82F6", "#4F86FF", "#5B8CFF", "#6A94FF", "#7A9BFF",
+    "#8AA3FF", "#9AAAFE", "#A9B2FE", "#B7BAFF", "#C4C2FF",
+]
+MA_COLORS = {
+    "MA5": "#ff5fa2",
+    "MA20": "#0f3b7a",
+    "MA40": "#0f5d3f",
+    "MA60": "#6b4f2a",
+    "MA120": "#d97706",
+}
+
+def apply_palette(fig):
+    fig.update_layout(template="plotly_dark", colorway=DARK_AIRY_PALETTE)
+    for tr in fig.data:
+        if getattr(tr, "type", None) == "bar":
+            tr.opacity = 0.92
+            tr.marker.line.width = 0
+            tr.hovertemplate = "%{x}<br>%{y}<extra></extra>"
+    return fig
 
 def render():
     trades = st.session_state.trades
@@ -41,6 +65,7 @@ def render():
     avg_days_win = wins["days_to_target"].mean() if win_count else 0
     avg_days_loss = losses["days_to_target"].mean() if loss_count else 0
 
+<<<<<<< HEAD
     total_eq = equity.groupby("date")["value"].sum().reset_index()
     max_val = total_eq["value"].max()
     max_dd_pct = ((max_val - total_eq["value"].min()) / max_val) * 100 if max_val > 0 else 0
@@ -158,13 +183,38 @@ def render():
     col1, col2 = st.columns(2)
 
     # 갭 비율 범위별 성과 — 막대 색상 진하게 + 투명도 60%
+=======
+    max_val = equity["value"].max()
+    max_dd_pct = ((max_val - equity["value"].min()) / max_val) * 100 if max_val > 0 else 0
+    profit_factor = (win_count * avg_win_peak / (loss_count * abs(avg_loss_peak))) if (loss_count and avg_loss_peak) else 0
+
+    st.markdown("#### 핵심 지표")
+    rows = [
+        [("총 거래 건수", f"{total}건", "neutral"), ("수익 인자", f"{profit_factor:.2f}", "positive" if profit_factor > 1 else "negative")],
+        [("승리", f"{win_count}건", "positive"), ("승률", f"{win_rate:.1f}%", "positive" if win_rate >= 60 else "negative"), ("최고수익", f"{avg_peak:+.1f}%", "positive"), ("평균수익", f"{avg_win_peak:+.1f}%", "positive"), ("승리 소요일", f"{avg_days_win:.1f}일", "neutral")],
+        [("패배", f"{loss_count}건", "negative"), ("평균최저", f"{avg_loss:+.1f}%", "negative"), ("평균손실", f"{avg_loss_peak:+.1f}%", "negative"), ("최대낙폭", f"{max_dd_pct:.1f}%", "negative"), ("평균소요일", f"{avg_days_loss:.1f}일", "neutral")],
+    ]
+    for row in rows:
+        cols = st.columns(len(row))
+        for col, (label, value, cls) in zip(cols, row):
+            with col:
+                st.markdown(
+                    f'<div class="kpi-card"><div class="kpi-label">{label}</div>'
+                    f'<div class="kpi-value {cls}">{value}</div></div>',
+                    unsafe_allow_html=True
+                )
+        st.markdown("<div style=\'height:8px\'></div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+
+>>>>>>> 259691f (style: unify dashboard theme)
     with col1:
         st.markdown("#### 갭 비율 범위별 성과")
         bins = [0, 5, 10, 15, 100]
         labels = ["0-5%", "5-10%", "10-15%", "15%+"]
         trades_binned = completed.copy()
         trades_binned["gap_bin"] = pd.cut(trades_binned["gap_rate"], bins=bins, labels=labels, right=False)
-
         gap_stats = []
         for lbl in labels:
             subset = trades_binned[trades_binned["gap_bin"] == lbl]
@@ -175,11 +225,11 @@ def render():
                     "win_rate": len(subset[subset["result"] == "승"]) / len(subset) * 100,
                     "avg_peak": subset["peak_pct"].mean()
                 })
-
         if gap_stats:
             gs = pd.DataFrame(gap_stats)
             fig = go.Figure()
             fig.add_trace(go.Bar(
+<<<<<<< HEAD
                 x=gs["range"], y=gs["win_rate"],
                 name="승률 (%)", marker_color="rgba(20,120,100,0.60)",
                 text=[f"{v:.0f}%" for v in gs["win_rate"]],
@@ -189,25 +239,48 @@ def render():
                 x=gs["range"], y=gs["avg_peak"],
                 name="평균 최고수익 (%)", mode="lines+markers",
                 yaxis="y2", line=dict(color="#eab308", width=2), marker=dict(size=7),
+=======
+                x=gs["range"], y=gs["win_rate"], name="승률 (%)",
+                marker_color=DARK_AIRY_PALETTE[0],
+                text=[f"{v:.0f}%" for v in gs["win_rate"]],
+                textposition="outside",
+                textfont=dict(color="#e2e8f0", size=11),
+                opacity=0.92,
+            ))
+            fig.add_trace(go.Scatter(
+                x=gs["range"], y=gs["avg_peak"], name="평균 최고수익 (%)",
+                mode="lines+markers", yaxis="y2",
+                line=dict(color=DARK_AIRY_PALETTE[4], width=2),
+                marker=dict(size=7),
+>>>>>>> 259691f (style: unify dashboard theme)
             ))
             fig.update_layout(
                 plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
                 height=300, margin=dict(l=0, r=40, t=10, b=0),
                 legend=dict(font=dict(color="#7a8599", size=10), orientation="h", y=-0.15),
                 xaxis=dict(color="#7a8599"),
+<<<<<<< HEAD
                 yaxis=dict(showgrid=True, gridcolor="#1e2530", color="#7a8599"),
                 yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#eab308"),
                 font=dict(color="#e2e8f0"), bargap=0.3,
+=======
+                yaxis=dict(showgrid=True, gridcolor="#1e2530", color="#7a8599", title=""),
+                yaxis2=dict(overlaying="y", side="right", showgrid=False, color=DARK_AIRY_PALETTE[4], title=""),
+                font=dict(color="#e2e8f0"), bargap=0.3
+>>>>>>> 259691f (style: unify dashboard theme)
             )
+            apply_palette(fig)
             st.plotly_chart(fig, use_container_width=True)
 
+<<<<<<< HEAD
     # 결과 분포
+=======
+>>>>>>> 259691f (style: unify dashboard theme)
     with col2:
         st.markdown("#### 결과 분포")
         result_counts = completed["result_detail"].value_counts()
         detail_map = {"reached_20": "20봉 도달", "reached_80": "80봉 도달", "stopped": "손절"}
-        color_map = {"reached_20": "#22c55e", "reached_80": "#14b8a6", "stopped": "#ef4444"}
-
+        color_map = {"reached_20": DARK_AIRY_PALETTE[1], "reached_80": DARK_AIRY_PALETTE[4], "stopped": "#ef4444"}
         fig2 = go.Figure(go.Pie(
             labels=[detail_map.get(k, k) for k in result_counts.index],
             values=result_counts.values,
@@ -219,12 +292,17 @@ def render():
         fig2.update_layout(
             plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
             height=300, margin=dict(l=0, r=0, t=10, b=0),
+<<<<<<< HEAD
             showlegend=False, font=dict(color="#e2e8f0"),
+=======
+            showlegend=False, font=dict(color="#e2e8f0")
+>>>>>>> 259691f (style: unify dashboard theme)
         )
         st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+<<<<<<< HEAD
     # ── RR 구간별 / 기대값 구간별 성과 — 진한 색 + 투명도 60% ──
     col3, col4 = st.columns(2)
 
@@ -305,6 +383,8 @@ def render():
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── MA 패턴별 성과 ────────────────────────────────────
+=======
+>>>>>>> 259691f (style: unify dashboard theme)
     st.markdown("#### MA 패턴별 성과")
     ma_groups = completed.groupby("ma_pattern").agg(
         거래수=("result", "count"),
@@ -315,37 +395,70 @@ def render():
     ma_groups["승률"] = (ma_groups["승리"] / ma_groups["거래수"] * 100).round(1)
     ma_groups["평균수익"] = ma_groups["평균수익"].round(1)
     ma_groups["평균손실"] = ma_groups["평균손실"].round(1)
-    ma_groups = ma_groups.rename(columns={"ma_pattern": "MA 패턴"})
-    ma_groups = ma_groups.sort_values("승률", ascending=False)
+    ma_groups = ma_groups.rename(columns={"ma_pattern": "MA 패턴"}).sort_values("승률", ascending=False)
+
+    st.markdown("""
+    <style>
+    div[data-testid="stDataFrame"] table,
+    div[data-testid="stDataFrame"] th,
+    div[data-testid="stDataFrame"] td {
+        font-size: 1.7em !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     st.dataframe(
         ma_groups[["MA 패턴", "거래수", "승리", "승률", "평균수익", "평균손실"]],
+<<<<<<< HEAD
         use_container_width=True, hide_index=True,
     )
 
     # ── 섹터별 성과 — 꺾은선 그래프 밝은 민트 (#5EEAD4) ───
+=======
+        use_container_width=True,
+        hide_index=True
+    )
+
+>>>>>>> 259691f (style: unify dashboard theme)
     st.markdown("#### 섹터별 성과")
     sector_groups = completed.groupby("sector").agg(
         거래수=("result", "count"),
         승리=("result", lambda x: (x == "승").sum()),
-        평균수익=("peak_pct", "mean"),
+        평균수익=("peak_pct", "mean")
     ).reset_index()
     sector_groups["승률"] = (sector_groups["승리"] / sector_groups["거래수"] * 100).round(1)
     sector_groups["평균수익"] = sector_groups["평균수익"].round(1)
-    sector_groups = sector_groups.rename(columns={"sector": "섹터"})
-    sector_groups = sector_groups.sort_values("거래수", ascending=False)
+    sector_groups = sector_groups.rename(columns={"sector": "섹터"}).sort_values("거래수", ascending=False)
 
+<<<<<<< HEAD
     fig5 = go.Figure()
     fig5.add_trace(go.Bar(
         x=sector_groups["섹터"], y=sector_groups["거래수"],
         name="거래수", marker_color="rgba(20,120,100,0.60)",
         text=sector_groups["거래수"], textposition="outside",
+=======
+    fig3 = go.Figure()
+    fig3.add_trace(go.Bar(
+        x=sector_groups["섹터"], y=sector_groups["거래수"], name="거래수",
+        marker_color=DARK_AIRY_PALETTE[2],
+        text=sector_groups["거래수"],
+        textposition="outside",
+>>>>>>> 259691f (style: unify dashboard theme)
         textfont=dict(color="#e2e8f0", size=11),
+        opacity=0.92,
     ))
+<<<<<<< HEAD
     fig5.add_trace(go.Scatter(
         x=sector_groups["섹터"], y=sector_groups["승률"],
         name="승률 (%)", mode="lines+markers",
         yaxis="y2", line=dict(color="#5eead4", width=2), marker=dict(size=7, color="#5eead4"),
+=======
+    fig3.add_trace(go.Scatter(
+        x=sector_groups["섹터"], y=sector_groups["승률"], name="승률 (%)",
+        mode="lines+markers", yaxis="y2",
+        line=dict(color=DARK_AIRY_PALETTE[5], width=2),
+        marker=dict(size=7),
+>>>>>>> 259691f (style: unify dashboard theme)
     ))
     fig5.update_layout(
         plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
@@ -353,7 +466,16 @@ def render():
         legend=dict(font=dict(color="#7a8599", size=10), orientation="h", y=-0.2),
         xaxis=dict(color="#7a8599"),
         yaxis=dict(showgrid=True, gridcolor="#1e2530", color="#7a8599"),
+<<<<<<< HEAD
         yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#5eead4", range=[0, 110]),
         font=dict(color="#e2e8f0"), bargap=0.3,
     )
     st.plotly_chart(fig5, use_container_width=True)
+=======
+        yaxis2=dict(overlaying="y", side="right", showgrid=False, color=DARK_AIRY_PALETTE[5], range=[0,110]),
+        font=dict(color="#e2e8f0"),
+        bargap=0.3
+    )
+    apply_palette(fig3)
+    st.plotly_chart(fig3, use_container_width=True)
+>>>>>>> 259691f (style: unify dashboard theme)
