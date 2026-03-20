@@ -26,6 +26,9 @@ if "positions" not in st.session_state:
     st.session_state.positions = get_sample_positions()
 if "signals" not in st.session_state:
     st.session_state.signals = get_sample_signals()
+if "signal_archive" not in st.session_state:
+    st.session_state.signal_archive = []
+
 
 with st.sidebar:
     st.markdown(
