@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-from utils import DARK_AIRY_PALETTE, MA_COLORS, result_badge, market_badge, fmt_date_short
+from utils import DARK_AIRY_PALETTE
 
 def render():
     trades = st.session_state.trades
@@ -107,25 +107,26 @@ def render():
 
     with col2:
         st.markdown("#### 결과 분포")
-        result_counts = trades["result_detail"].value_counts() if "result_detail" in trades.columns else pd.Series(dtype=int)
-        detail_map = {"reached_20": "20봉 도달", "reached_80": "80봉 도달", "stopped": "손절"}
-        color_map = {"reached_20": DARK_AIRY_PALETTE[1], "reached_80": DARK_AIRY_PALETTE[4], "stopped": "#ef4444"}
+        if "result_detail" in trades.columns:
+            result_counts = trades["result_detail"].value_counts()
+            detail_map = {"reached_20": "20봉 도달", "reached_80": "80봉 도달", "stopped": "손절"}
+            color_map = {"reached_20": DARK_AIRY_PALETTE[1], "reached_80": DARK_AIRY_PALETTE[4], "stopped": "#ef4444"}
 
-        if len(result_counts):
-            fig2 = go.Figure(go.Pie(
-                labels=[detail_map.get(k, k) for k in result_counts.index],
-                values=result_counts.values,
-                hole=0.55,
-                marker=dict(colors=[color_map.get(k, "#7a8599") for k in result_counts.index]),
-                textinfo="label+value",
-                textfont=dict(size=12, color="#e2e8f0"),
-            ))
-            fig2.update_layout(
-                plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
-                height=300, margin=dict(l=0, r=0, t=10, b=0),
-                showlegend=False, font=dict(color="#e2e8f0")
-            )
-            st.plotly_chart(fig2, use_container_width=True)
+            if len(result_counts):
+                fig2 = go.Figure(go.Pie(
+                    labels=[detail_map.get(k, k) for k in result_counts.index],
+                    values=result_counts.values,
+                    hole=0.55,
+                    marker=dict(colors=[color_map.get(k, "#7a8599") for k in result_counts.index]),
+                    textinfo="label+value",
+                    textfont=dict(size=12, color="#e2e8f0"),
+                ))
+                fig2.update_layout(
+                    plot_bgcolor="#0a0e14", paper_bgcolor="#0a0e14",
+                    height=300, margin=dict(l=0, r=0, t=10, b=0),
+                    showlegend=False, font=dict(color="#e2e8f0")
+                )
+                st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
