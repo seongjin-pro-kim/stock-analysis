@@ -5,52 +5,108 @@ import plotly.graph_objects as go
 from utils import init_state, df_state
 
 
+def _safe_num(x, default=0.0):
+    try:
+        if pd.isna(x):
+            return default
+        return float(x)
+    except Exception:
+        return default
+
+
+def _safe_int(x, default=0):
+    try:
+        if pd.isna(x):
+            return default
+        return int(x)
+    except Exception:
+        return default
+
+
 def render():
     init_state()
-    st.markdown("### ▸ 매매 성과 분석")
+    st.markdown("### ▸ 대시보드")
 
-    df = df_state("trades")
-    if df.empty:
-        st.info("데이터가 없습니다.")
-        return
+    trades = df_state("trades")
+    signals = df_state("signals")
+    archive = df_state("signal_archive")
+    idx = df_state("major_indices")
 
-    if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("총 매매", f"{len(trades)}건")
+    c2.metric("진행중", f"{_safe_int((trades['result'] == '잉').sum()) if not trades.empty and 'result' in trades.columns else 0}건")
+    c3.metric("시그널", f"{len(signals)}건")
+    c4.metric("아카이브", f"{len(archive)}건")
 
-    profit_col = "profit_pct" if "profit_pct" in df.columns else None
-    equity_col = "equity" if "equity" in df.columns else None
-
-    fig = go.Figure()
-    if profit_col:
-        win = df[df.get("result", "") == "승"]
-        lose = df[df.get("result", "") == "패"]
-        if len(win):
-            fig.add_trace(go.Bar(
-                x=win["date"], y=win[profit_col], name="승리",
-                marker_color="#22c55e",
-                hovertemplate="날짜: %{x|%m/%d}<br>수익: %{y:.2f}%<extra></extra>"
-            ))
-        if len(lose):
-            fig.add_trace(go.Bar(
-                x=lose["date"], y=lose[profit_col], name="패배",
-                marker_color="#7f1d1d",
-                hovertemplate="날짜: %{x|%m/%d}<br>수익: %{y:.2f}%<extra></extra>"
-            ))
-
-    if equity_col:
-        fig.add_trace(go.Scatter(
-            x=df["date"], y=df[equity_col], name="누적", mode="lines+markers",
-            line=dict(color="#38bdf8", width=2),
-            hovertemplate="날짜: %{x|%m/%d}<br>누적: %{y:.2f}<extra></extra>"
-        ))
-
-    fig.update_layout(
-        template="plotly_dark", barmode="group", hovermode="x unified", height=420,
-        margin=dict(l=20, r=20, t=30, b=20),
-        paper_bgcolor="#0a0e14", plot_bgcolor="#0a0e14",
-        legend=dict(orientation="h", y=1.05)
+    st.markdown(
+        """
+        <style>
+        .card{
+            background:#0f141b;
+            border:1px solid #1e2530;
+            border-radius:10px;
+            padding:10px 12px;
+            margin-bottom:10px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
     )
-    st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown("#### ▸ 수익 인자")
-    st.caption("손익비, 기대값, 승률, 보유기간이 성과에 미치는 영향을 보여줍니다.")
+    if not idx.empty and "date" in idx.columns:
+        idx = idx.copy()
+        idx["date"] = pd.to_datetime(idx["date"], errors="coerce")
+
+        fig = go.Figure()
+        series_colors = {
+            "KOSPI": "#3b82f6",
+            "KOSDAQ": "#a855f7",
+            "NASDAQ": "#14b8a6",
+            "S&P500": "#f59e0b",
+        }
+
+        for name, color in series_colors.items():
+            if name in idx.columns:
+                fig.add_trace(go.Scatter(
+                    x=idx["date"],
+                    y=idx[name],
+                    name=name,
+                    mode="lines",
+                    line=dict(width=2, color=color),
+                    hovertemplate=f"{name}: %{{y:.2f}}<extra></extra>",
+                ))
+
+        fig.update_layout(
+            template="plotly_dark",
+            hovermode="x unified",
+            height=320,
+            margin=dict(l=20, r=20, t=20, b=20),
+            paper_bgcolor="#0a0e14",
+            plot_bgcolor="#0a0e14",
+            legend=dict(orientation="h", y=1.08),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    if not archive.empty:
+        st.markdown("#### ▸ Signal Archive")
+        st.dataframe(archive, use_container_width=True, hide_index=True)
+
+    if not signals.empty and "signal_type" in signals.columns:
+        st.markdown("#### ▸ 시그널 요약")
+        vc = signals["signal_type"].value_counts()
+        pie = go.Figure(data=[go.Pie(
+            labels=vc.index,
+            values=vc.values,
+            hole=.55,
+            textinfo="label+percent",
+            marker=dict(colors=["#22c55e", "#ef4444", "#3b82f6", "#a855f7"]),
+        )])
+        pie.update_layout(
+            template="plotly_dark",
+            height=300,
+            margin=dict(l=10, r=10, t=10, b=50),
+            paper_bgcolor="#0a0e14",
+            plot_bgcolor="#0a0e14",
+            showlegend=True,
+        )
+        st.plotly_chart(pie, use_container_width=True)
