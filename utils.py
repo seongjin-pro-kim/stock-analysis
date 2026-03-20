@@ -15,6 +15,10 @@ def init_state():
         if k not in st.session_state:
             st.session_state[k] = v
 
+def df_state(key):
+    v = st.session_state.get(key, [])
+    return pd.DataFrame(v).copy() if not isinstance(v, pd.DataFrame) else v.copy()
+
 
 DARK_AIRY_PALETTE = [
     "#3B82F6", "#4F86FF", "#5B8CFF", "#6A94FF", "#7A9BFF",

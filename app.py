@@ -1,21 +1,21 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+from views import overview, performance, trade_log, signals, risk
+from utils import init_state, df_state
 
-def render():
-    init_state()
-    st.markdown("### ▸ 메인 대시보드")
+st.set_page_config(page_title="Stock Analysis", layout="wide")
+init_state()
 
-    trades = df_state("trades")
-    signals = df_state("signals")
-    archive = df_state("signal_archive")
-    idx = df_state("major_indices")
+def main():
+    overview.render()
+    performance.render()
+    trade_log.render()
+    signals.render()
+    risk.render()
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("총 매매", f"{len(trades)}건")
-    c2.metric("진행중", f"{int((trades['result'] == '잉').sum()) if 'result' in trades.columns else 0}건")
-    c3.metric("시그널", f"{len(signals)}건")
-    c4.metric("아카이브", f"{len(archive)}건")
+if __name__ == "__main__":
+    main()
 
     if len(idx) and "date" in idx.columns:
         idx["date"] = pd.to_datetime(idx["date"], errors="coerce")
