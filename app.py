@@ -1,10 +1,10 @@
-#GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit (v2.1 — 톤다운·간격·정렬·음영 수정)
+"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit"""
 import streamlit as st
-import pandas as pd
 from sample_data import (
-    get_sample_trades, get_sample_equity_curve,
-    get_sample_positions, get_sample_signals,
-    get_sample_signal_archive,
+    get_sample_trades,
+    get_sample_equity_curve,
+    get_sample_positions,
+    get_sample_signals,
 )
 from utils import setup_theme
 from views import overview, performance, trade_log, signals, market, risk, data_mgmt
@@ -18,169 +18,30 @@ st.set_page_config(
 
 setup_theme()
 
-#HEAD
-
-h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
-
-
-.kpi-card {
-    background: #111820;
-    border: 1 px solid #1e2530;
-    border-radius: 10 px;
-    padding: 18 px 20 px;
-    text-align: left;
-    position: relative;
-    min-height: 90 px;
-}
-.kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 6px; }
-.kpi-value { font-size: 26 px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.kpi-sub { color: #7a8599; font-size: 11px; margin-top:2px; }
-.positive { color: #22c55e; }
-.negative { color: #ef4444; }
-.neutral { color: #14b8a6; }
-
-
-.badge-win { background:#22c55e22; color:#22c55e; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-lose { background:#ef444422; color:#ef4444; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-progress { background:#eab30822; color:#eab308; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; }
-.badge-ing { background:#3b82f622; color:#3b82f6; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; }
-
-.badge-kospi { background:#3b82f622; color:#3b82f6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
-.badge-kosdaq { background:#8b5cf622; color:#a78bfa; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
-.badge-nasdaq { background:#14b8a622; color:#14b8a6; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
-.badge-btc { background:#eab30822; color:#eab308; padding:1px 4px; border-radius:3px; font-size:9px; font-weight:600; }
-
-
-.grade-a-row { background: rgba(239, 68, 68, 0.30) !important; }
-
-
-.highlight-cell { background: rgba(20,184,166,0.06); }
-
-
-.section-header { color: #e2e8f0; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
-
-
-.dataframe { font-variant-numeric: tabular-nums !important; }
-div[data-testid="stDataFrame"] { border: 1 px solid #1e2530; border-radius: 8px; }
-
-
-.logo-box {
-    display: flex; align-items: center; gap: 10 px;
-    padding: 8 px 0 16 px 0; border-bottom: 1 px solid #1e2530; margin-bottom: 16px;
-}
-.logo-icon { font-size: 28 px; }
-.logo-title { color: #e2e8f0; font-size: 16px; font-weight: 700; }
-.logo-sub { color: #7a8599; font-size: 11px; }
-
-
-[data-testid="stMetric"] { background: #111820; border: 1px solid #1e2530; border-radius: 10px; padding: 12px 16px; }
-
-
-.tooltip-wrapper { position: relative; display: inline-block; cursor: pointer; }
-.tooltip-box {
-    visibility: hidden; opacity: 0;
-    position: absolute; z-index: 999;
-    bottom: 110%; left: 50%; transform: translateX(-50%);
-    background: #1a2233; border: 1px solid #2a3545;
-    border-radius: 8 px; padding: 12 px 14 px;
-    min-width: 280 px; max-width: 380 px;
-    box-shadow: 0 8 px 24 px rgba(0,0,0,0.5);
-    font-size: 11 px; color: #e2e8f0;
-    transition: opacity 0.2 s ease, visibility 0.2 s ease;
-    white-space: normal; line-height: 1.6;
-}
-.tooltip-wrapper:hover .tooltip-box { visibility: visible; opacity: 1; }
-
-
-.info-tip {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 16 px; height: 16 px; border-radius: 50%;
-    background: #1e2530; color: #7a8599; font-size: 10px;
-    cursor: help; margin-left: 6 px; font-weight: 700;
-    border: 1 px solid #2a3545;
-}
-.info-tip:hover + .info-content { visibility: visible; opacity: 1; }
-.info-content {
-    visibility: hidden; opacity: 0;
-    position: absolute; z-index: 999;
-    top: 28 px; left: 0;
-    background: #1a2233; border: 1px solid #2a3545;
-    border-radius: 8 px; padding: 12 px 14 px;
-    min-width: 260 px; max-width: 360 px;
-    box-shadow: 0 8 px 24 px rgba(0,0,0,0.5);
-    font-size: 11 px; color: #c0c8d8; line-height: 1.6;
-    transition: opacity 0.2 s ease, visibility 0.2 s ease;
-}
-
-
-.calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28 px; height:28 px; border-radius: 6 px; font-size:11 px; margin:1 px; }
-.cal-win { background:#22c55e33; color:#22c55e; font-weight:600; }
-.cal-lose { background:#ef444433; color:#ef4444; font-weight:600; }
-.cal-ing { background:#3b82f633; color:#3b82f6; font-weight:600; }
-.cal-empty { background: transparent; color: #3a4555; }
-</style>
-"", unsafe_allow_html=True}
-
-
-# ── Session State 초기화 ─────────────────────────────────
-import os
-
-_CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_etc", "trades_enriched_v1.csv")
-
-=======
-#259691f (style: unify dashboard theme)
 if "trades" not in st.session_state:
-    if os.path.exists(_CSV_PATH):
-        st.session_state.trades = pd.read_csv(_CSV_PATH, encoding="utf-8-sig")
-        if "date" in st.session_state.trades.columns:
-            st.session_state.trades["date"] = pd.to_datetime(st.session_state.trades["date"])
-        if "signal_date" in st.session_state.trades.columns:
-            st.session_state.trades["signal_date"] = pd.to_datetime(
-                st.session_state.trades["signal_date"], errors="coerce"
-            )
-    else:
-        st.session_state.trades = get_sample_trades()
+    st.session_state.trades = get_sample_trades()
 if "equity_curve" not in st.session_state:
     st.session_state.equity_curve = get_sample_equity_curve()
 if "positions" not in st.session_state:
     st.session_state.positions = get_sample_positions()
 if "signals" not in st.session_state:
     st.session_state.signals = get_sample_signals()
-if "signal_archive" not in st.session_state:
-    st.session_state.signal_archive = get_sample_signal_archive()
 
 with st.sidebar:
     st.markdown(
-        '<div class="logo-box"><span class="logo-icon">📈</span>'
-        '<div><div class="logo-title">GAP R-Zone</div>'
-        '<div class="logo-sub">v6.5 Strategy</div></div></div>',
-        unsafe_allow_html=True
+        '<div class="logo-box"><span class="logo-icon">📈</span><div><div class="logo-title">GAP R-Zone</div><div class="logo-sub">v6.5 Strategy</div></div></div>',
+        unsafe_allow_html=True,
     )
 
     page = st.radio(
         "메뉴",
-# HEAD
-        ["◈ 메인 대시보드", "▦ 매매 성과", "▤ 매매 기록",
-         "◉ 시그널", "◎ 시장 개요", "△ 리스크", "▫ 데이터 관리"],
-=======
         ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록", "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
-#259691f (style: unify dashboard theme)
         label_visibility="collapsed",
     )
+
     st.divider()
     st.caption("Created with Streamlit + Python")
 
-#HEAD
-
-# ── 공통 헬퍼 ────────────────────────────────────────────
-from utils import fmt_krw, result_badge, market_badge
-
-
-# ── 페이지 라우팅 ────────────────────────────────────────
-from views import overview, performance, trade_log, signals, market, risk, data_mgmt
-
-=======
-#259691f (style: unify dashboard theme)
 if "메인 대시보드" in page:
     overview.render()
 elif "매매 성과" in page:
@@ -193,5 +54,5 @@ elif "시장 개요" in page:
     market.render()
 elif "리스크" in page:
     risk.render()
-elif "데이터" in page:
+elif "데이터 관리" in page:
     data_mgmt.render()
