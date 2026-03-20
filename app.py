@@ -25,12 +25,12 @@ h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
 
 .kpi-card {
     background: #111820;
-    border: 1px solid #1e2530;
-    border-radius: 10px;
-    padding: 18px 20px;
+    border: 1 px solid #1e2530;
+    border-radius: 10 px;
+    padding: 18 px 20 px;
     text-align: left;
     position: relative;
-    min-height: 90px;
+    min-height: 90 px;
 }
 .kpi-label { color: #7a8599; font-size: 12px; margin-bottom: 6px; }
 .kpi-value { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
