@@ -18,7 +18,7 @@ st.set_page_config(
 
 setup_theme()
 
-<<<<<<< HEAD
+#HEAD
 
 h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
 
@@ -159,7 +159,7 @@ with st.sidebar:
 
     page = st.radio(
         "메뉴",
-<<<<<<< HEAD
+# HEAD
         ["◈ 메인 대시보드", "▦ 매매 성과", "▤ 매매 기록",
          "◉ 시그널", "◎ 시장 개요", "△ 리스크", "▫ 데이터 관리"],
 =======
@@ -170,7 +170,7 @@ with st.sidebar:
     st.divider()
     st.caption("Created with Streamlit + Python")
 
-<<<<<<< HEAD
+#HEAD
 
 # ── 공통 헬퍼 ────────────────────────────────────────────
 from utils import fmt_krw, result_badge, market_badge
