@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-from utils import result_badge, market_badge, fmt_date_short, archive_result_badge
+from utils import result_badge, market_badge
 
 DARK_AIRY_PALETTE = [
     "#3B82F6", "#4F86FF", "#5B8CFF", "#6A94FF", "#7A9BFF",
@@ -18,9 +18,10 @@ def render():
     positions = st.session_state.positions
     signal_archive = st.session_state.signal_archive
 
-    total_trades = len(trades)
-    wins_df = trades[trades["result"] == "승"]
-    losses_df = trades[trades["result"] == "패"]
+    completed = trades[trades["result"].isin(["승", "패"])]
+    total_trades = len(completed)
+    wins_df = completed[completed["result"] == "승"]
+    losses_df = completed[completed["result"] == "패"]
     wins = len(wins_df)
     losses = len(losses_df)
     win_rate = (wins / total_trades * 100) if total_trades > 0 else 0
@@ -31,8 +32,8 @@ def render():
     pnl_pct = (total_pnl / total_eq["value"].iloc[0]) * 100 if total_eq["value"].iloc[0] > 0 else 0
     current_capital = total_eq["value"].iloc[-1]
 
-    if len(trades) > 0:
-        ma_grp = trades.groupby("ma_pattern").agg(
+    if len(completed) > 0:
+        ma_grp = completed.groupby("ma_pattern").agg(
             win_cnt=("result", lambda x: (x == "승").sum()),
             avg_profit=("peak_pct", "mean"),
         ).reset_index()
@@ -218,7 +219,7 @@ def render():
                     <td style="padding:8px; color:#e2e8f0; text-align:right;">{a['target_rate']:.1f}%</td>
                     <td style="padding:8px; color:#e2e8f0; text-align:right;">{a['progress_pct']:.0f}%</td>
                     <td style="padding:8px; color:#7a8599; text-align:right;">{a['days_elapsed']}일</td>
-                    <td style="padding:8px; text-align:center;">{archive_result_badge(a['archive_result'])}</td>
+                    <td style="padding:8px; text-align:center;">{result_badge(a['archive_result'])}</td>
                 </tr>"""
             st.markdown(
                 f'<div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap;">'
