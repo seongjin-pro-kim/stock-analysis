@@ -3,7 +3,8 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
-from utils import result_badge, market_badge, fmt_date_short
+from utils import result_badge, market_badge
+
 import calendar
 
 
@@ -90,7 +91,7 @@ def render():
     for _, r in filtered.iterrows():
         peak_color = "#22c55e" if r["peak_pct"] >= 20 else ("#eab308" if r["peak_pct"] >= 10 else "#ef4444")
         low_color = "#ef4444" if r["min_low_pct"] < -5 else "#7a8599"
-        date_str = fmt_date_short(r["date"])
+        date_str = x.strftime("%m/%d")
         grade = r.get("grade", "-") or "-"
         grade_colors = {"A": "#22c55e", "B": "#eab308", "C": "#ef4444"}
         g_color = grade_colors.get(grade, "#7a8599")
