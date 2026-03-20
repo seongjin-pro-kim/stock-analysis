@@ -39,8 +39,8 @@ st.markdown(
         color: #cbd5e1;
     }
     .block-container {
-        padding-top: 1.2rem;
-        padding-bottom: 2rem;
+        padding-top: 0.5rem;
+        padding-bottom: 1.5rem;
     }
 
     /* 섹션 간격만 넓힘 */
