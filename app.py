@@ -20,7 +20,7 @@ setup_theme()
 
 <<<<<<< HEAD
 
-h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6em !important; }
+h3, h4 { margin-top: 2.4 em !important; margin-bottom: 0.6 em !important; }
 
 
 .kpi-card {
