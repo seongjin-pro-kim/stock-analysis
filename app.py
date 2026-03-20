@@ -27,60 +27,88 @@ st.markdown(
     html, body, [class*="css"] {
         font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
     }
+
     .stApp {
         background: linear-gradient(180deg, #0a0e14 0%, #0f141b 100%);
         color: #e2e8f0;
     }
+
     [data-testid="stSidebar"] {
         background: #0a0e14;
         border-right: 1px solid #1e2530;
     }
+
     [data-testid="stSidebar"] * {
         color: #cbd5e1;
     }
+
     .block-container {
         padding-top: 1.2rem;
         padding-bottom: 2rem;
     }
-    h1, h2, h3, h4, h5, h6, p, span, label, div {
-        color: #e2e8f0;
+
+    .stMarkdown, .stDataFrame, .stPlotlyChart, .stMetric, .element-container {
+        margin-top: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
     }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: #d6dde8 !important;
+        margin-top: 2rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    hr {
+        margin: 2rem 0 !important;
+        border-color: #1e2530 !important;
+    }
+
     .stMetric {
         background: #0f141b;
         border: 1px solid #1e2530;
         border-radius: 12px;
         padding: 12px 14px;
     }
+
     .stMetric label {
         color: #7a8599 !important;
         font-size: 12px !important;
     }
+
     .stMetric [data-testid="stMetricValue"] {
         color: #e2e8f0 !important;
         font-size: 24px !important;
         font-weight: 700 !important;
     }
-    .badge-win { color:#22c55e; font-weight:700; }
-    .badge-lose { color:#ef4444; font-weight:700; }
-    .badge-ing { color:#3b82f6; font-weight:700; }
-    .badge-progress { color:#a78bfa; font-weight:700; }
+
+    .badge-win { color:#8fbf8f; font-weight:700; }
+    .badge-lose { color:#c98a8a; font-weight:700; }
+    .badge-ing { color:#8aa7d6; font-weight:700; }
+    .badge-progress { color:#a8a0c9; font-weight:700; }
+
     .badge-kospi, .badge-kosdaq, .badge-nasdaq, .badge-btc {
         padding: 2px 8px;
         border-radius: 999px;
         font-size: 10px;
         font-weight: 700;
         display: inline-block;
+        filter: saturate(0.55) brightness(0.92);
     }
-    .badge-kospi { background:#172554; color:#93c5fd; }
-    .badge-kosdaq { background:#2e1065; color:#c4b5fd; }
-    .badge-nasdaq { background:#064e3b; color:#99f6e4; }
-    .badge-btc { background:#78350f; color:#fde68a; }
+
+    .badge-kospi { background:#1a2330; color:#aab6c9; }
+    .badge-kosdaq { background:#241f2f; color:#b7b0c9; }
+    .badge-nasdaq { background:#17302b; color:#a8c8c1; }
+    .badge-btc { background:#2f2a1b; color:#c9be92; }
+
     .table-wrap {
         background:#0a0e14;
         border:1px solid #1e2530;
         border-radius:12px;
         overflow-x:auto;
+        margin-top: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
     }
+
     .table-dark {
         width:100%;
         border-collapse:collapse;
@@ -88,24 +116,28 @@ st.markdown(
         font-variant-numeric:tabular-nums;
         font-size:11px;
     }
+
     .table-dark thead tr {
         border-bottom:2px solid #1e2530;
         background:#111820;
     }
+
     .table-dark th {
-        padding:7px 6px;
+        padding:9px 6px;
         color:#7a8599;
         font-size:10px;
         font-weight:600;
     }
+
     .table-dark td {
-        padding:7px 6px;
+        padding:9px 6px;
         border-bottom:1px solid #1e2530;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
 
 CSV_PATH = os.path.join(os.path.dirname(__file__), "csv_etc", "trades_enriched_v1.csv")
 
