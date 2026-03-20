@@ -113,7 +113,7 @@ div[data-testid="stDataFrame"] { border: 1 px solid #1e2530; border-radius: 8px;
 }
 
 
-.calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28 px; height:28 px; border-radius:6px; font-size:11px; margin:1px; }
+.calendar-day { display:inline-flex; align-items:center; justify-content:center; width:28 px; height:28 px; border-radius: 6 px; font-size:11 px; margin:1 px; }
 .cal-win { background:#22c55e33; color:#22c55e; font-weight:600; }
 .cal-lose { background:#ef444433; color:#ef4444; font-weight:600; }
 .cal-ing { background:#3b82f633; color:#3b82f6; font-weight:600; }
