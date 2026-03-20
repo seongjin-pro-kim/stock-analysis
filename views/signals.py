@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-from utils import market_badge, fmt_date_short
+from utils import market_badge
 
 
 def render():
