@@ -1,5 +1,7 @@
 import plotly.graph_objects as go
 
+st.write("app start")
+st.write(list(st.session_state.keys()))
 def render():
     init_state()
     st.markdown("### ▸ 메인 대시보드")
@@ -7,6 +9,7 @@ def render():
     trades = df_state("trades")
     signals = df_state("signals")
     archive = df_state("signal_archive")
+
     idx = df_state("major_indices")
 
     c1, c2, c3, c4 = st.columns(4)
