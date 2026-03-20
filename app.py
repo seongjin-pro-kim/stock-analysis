@@ -1,61 +1,42 @@
-"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit"""
-import streamlit as st
-from sample_data import (
-    get_sample_trades,
-    get_sample_equity_curve,
-    get_sample_positions,
-    get_sample_signals,
-)
-from utils import setup_theme
-from views import overview, performance, trade_log, signals, market, risk, data_mgmt
+import plotly.graph_objects as go
 
-st.set_page_config(
-    page_title="GAP R-Zone Dashboard",
-    page_icon="📈",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+def render():
+    init_state()
+    st.markdown("### ▸ 메인 대시보드")
 
-setup_theme()
+    trades = df_state("trades")
+    signals = df_state("signals")
+    archive = df_state("signal_archive")
+    idx = df_state("major_indices")
 
-if "trades" not in st.session_state:
-    st.session_state.trades = get_sample_trades()
-if "equity_curve" not in st.session_state:
-    st.session_state.equity_curve = get_sample_equity_curve()
-if "positions" not in st.session_state:
-    st.session_state.positions = get_sample_positions()
-if "signals" not in st.session_state:
-    st.session_state.signals = get_sample_signals()
-if "signal_archive" not in st.session_state:
-    st.session_state.signal_archive = []
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("총 매매", f"{len(trades)}건")
+    c2.metric("진행중", f"{int((trades['result']=='잉').sum()) if 'result' in trades.columns else 0}건")
+    c3.metric("시그널", f"{len(signals)}건")
+    c4.metric("아카이브", f"{len(archive)}건")
 
+    if len(idx) and "date" in idx.columns:
+        idx["date"] = pd.to_datetime(idx["date"], errors="coerce")
+        fig = go.Figure()
+        series_colors = {
+            "KOSPI": "#3b82f6", "KOSDAQ": "#a855f7",
+            "NASDAQ": "#14b8a6", "S&P500": "#f59e0b"
+        }
+        for name, color in series_colors.items():
+            if name in idx.columns:
+                fig.add_trace(go.Scatter(
+                    x=idx["date"], y=idx[name], name=name, mode="lines",
+                    line=dict(width=2, color=color),
+                    hovertemplate=f"{name}: %{{y:.2f}}<extra></extra>"
+                ))
+        fig.update_layout(
+            template="plotly_dark", hovermode="x unified", height=320,
+            margin=dict(l=20, r=20, t=20, b=20),
+            paper_bgcolor="#0a0e14", plot_bgcolor="#0a0e14",
+            legend=dict(orientation="h", y=1.08)
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-with st.sidebar:
-    st.markdown(
-        '<div class="logo-box"><span class="logo-icon">📈</span><div><div class="logo-title">GAP R-Zone</div><div class="logo-sub">v6.5 Strategy</div></div></div>',
-        unsafe_allow_html=True,
-    )
-
-    page = st.radio(
-        "메뉴",
-        ["🏠 메인 대시보드", "📊 매매 성과", "📋 매매 기록", "📡 시그널", "🌐 시장 개요", "🛡️ 리스크", "💾 데이터 관리"],
-        label_visibility="collapsed",
-    )
-
-    st.divider()
-    st.caption("Created with Streamlit + Python")
-
-if "메인 대시보드" in page:
-    overview.render()
-elif "매매 성과" in page:
-    performance.render()
-elif "매매 기록" in page:
-    trade_log.render()
-elif "시그널" in page:
-    signals.render()
-elif "시장 개요" in page:
-    market.render()
-elif "리스크" in page:
-    risk.render()
-elif "데이터 관리" in page:
-    data_mgmt.render()
+    if len(archive):
+        st.markdown("#### ▸ Signal Archive")
+        st.dataframe(archive, use_container_width=True, hide_index=True)

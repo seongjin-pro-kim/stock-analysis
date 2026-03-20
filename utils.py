@@ -1,5 +1,20 @@
 import streamlit as st
-import plotly.io as pio
+import pandas as pd
+
+def init_state():
+    defaults = {
+        "trades": [],
+        "equity_curve": [],
+        "positions": [],
+        "signals": [],
+        "signal_archive": [],
+        "major_indices": [],
+        "risk_metrics": {},
+    }
+    for k, v in defaults.items():
+        if k not in st.session_state:
+            st.session_state[k] = v
+
 
 DARK_AIRY_PALETTE = [
     "#3B82F6", "#4F86FF", "#5B8CFF", "#6A94FF", "#7A9BFF",
