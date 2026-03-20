@@ -1,4 +1,4 @@
-"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit (v2.1 — 톤다운·간격·정렬·음영 수정)"""
+#GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit (v2.1 — 톤다운·간격·정렬·음영 수정)
 import streamlit as st
 import pandas as pd
 from sample_data import (
