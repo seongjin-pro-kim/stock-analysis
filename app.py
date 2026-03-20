@@ -119,7 +119,7 @@ div[data-testid="stDataFrame"] { border: 1 px solid #1e2530; border-radius: 8px;
 .cal-ing { background:#3b82f633; color:#3b82f6; font-weight:600; }
 .cal-empty { background: transparent; color: #3a4555; }
 </style>
-"", unsafe_allow_html=True)
+"", unsafe_allow_html=True}
 
 
 # ── Session State 초기화 ─────────────────────────────────
