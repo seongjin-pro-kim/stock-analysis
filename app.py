@@ -9,6 +9,10 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+    st.write("## 현재 파일 목록 (repr)")
+for f in sorted(files):
+    st.text(repr(f))
+st.stop()
 
 def load_module(name, filename):
     path = os.path.join(BASE_DIR, filename)
