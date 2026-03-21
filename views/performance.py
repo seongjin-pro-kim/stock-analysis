@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 
-from utils import init_state, df_state, fmt_date_short, result_badge, market_badge
+from utils import fmt_date_short
 
 
 def _safe_num(x, default=0.0):
@@ -26,176 +26,376 @@ def _safe_int(x, default=0):
         return default
 
 
-def _mini_badge(text, bg, fg):
-    return f'<span style="display:inline-block;padding:1px 6px;border-radius:999px;background:{bg};color:{fg};font-size:10px;font-weight:700;">{text}</span>'
+def _fmt_pct(x):
+    return f"{_safe_num(x):.1f}%"
 
 
-def _html_table(df):
-    if df.empty:
-        return "<div style='color:#7a8599;padding:10px 0;'>데이터가 없습니다.</div>"
+def _fmt_num(x):
+    return f"{_safe_num(x):,.0f}"
 
+
+def _fmt_rr(x):
+    return f"{_safe_num(x):.2f}"
+
+
+def _preview_table(items, cols, title=""):
+    if len(items) == 0:
+        return "<div style='color:#7a8599;font-size:10px;'>데이터 없음</div>"
+
+    header = "".join(
+        f"<th style='padding:3px 6px;color:#7a8599;font-size:10px;text-align:left;'>{c}</th>"
+        for c in cols
+    )
     rows = []
-    for _, r in df.iterrows():
-        grade = str(r.get("grade", "-") or "-")
-        grade_bg = {"A": "rgba(34,197,94,0.14)", "B": "rgba(234,179,8,0.14)", "C": "rgba(239,68,68,0.14)"}.get(grade, "rgba(122,133,153,0.14)")
-        grade_fg = {"A": "#22c55e", "B": "#eab308", "C": "#ef4444"}.get(grade, "#7a8599")
-        result = str(r.get("result", "-") or "-")
-        result_bg = {"승": "rgba(34,197,94,0.14)", "패": "rgba(127,29,29,0.28)", "잉": "rgba(59,130,246,0.14)"}.get(result, "rgba(122,133,153,0.14)")
-        result_fg = {"승": "#22c55e", "패": "#ef4444", "잉": "#3b82f6"}.get(result, "#7a8599")
-
-        rows.append(
-            "<tr style='border-bottom:1px solid #1e2530;'>"
-            f"<td style='padding:6px 4px;text-align:center;'>{market_badge(str(r.get('market','')))}</td>"
-            f"<td style='padding:6px 4px;color:#7a8599;text-align:center;font-size:10px;'>{fmt_date_short(r.get('date'))}</td>"
-            f"<td style='padding:6px 4px;color:#e2e8f0;text-align:left;font-size:11px;font-weight:500;'>{r.get('name','-')}</td>"
-            f"<td style='padding:6px 4px;color:#7a8599;text-align:left;font-size:10px;'>{r.get('code','-')}</td>"
-            f"<td style='padding:6px 4px;text-align:center;'><span style='padding:1px 6px;border-radius:999px;background:{grade_bg};color:{grade_fg};font-size:10px;font-weight:700;'>{grade}</span></td>"
-            f"<td style='padding:6px 4px;color:#e2e8f0;text-align:right;font-size:10px;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
-            f"<td style='padding:6px 4px;color:#e2e8f0;text-align:right;font-size:10px;'>₩{_safe_int(r.get('entry_price')):,}</td>"
-            f"<td style='padding:6px 4px;color:#14b8a6;text-align:right;font-size:10px;font-weight:600;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
-            f"<td style='padding:6px 4px;color:#14b8a6;text-align:right;font-size:10px;'>₩{_safe_int(r.get('target_price')):,}</td>"
-            f"<td style='padding:6px 4px;color:#ef4444;text-align:right;font-size:10px;'>₩{_safe_int(r.get('stop_price')):,}</td>"
-            f"<td style='padding:6px 4px;color:#ef4444;text-align:right;font-size:10px;'>{_safe_num(r.get('stop_rate')):.1f}%</td>"
-            f"<td style='padding:6px 4px;color:#22c55e;text-align:center;font-size:10px;font-weight:700;'>{_safe_num(r.get('rr_ratio')):.2f}</td>"
-            f"<td style='padding:6px 4px;color:#38bdf8;text-align:right;font-size:10px;font-weight:700;'>{_safe_num(r.get('expected_value')):.1f}</td>"
-            f"<td style='padding:6px 4px;color:#22c55e;text-align:right;font-size:10px;font-weight:700;'>{_safe_num(r.get('peak_pct')):+.1f}%</td>"
-            f"<td style='padding:6px 4px;color:#ef4444;text-align:right;font-size:10px;'>{_safe_num(r.get('min_low_pct')):+.1f}%</td>"
-            f"<td style='padding:6px 4px;text-align:center;'>{_mini_badge(result, result_bg, result_fg)}</td>"
-            f"<td style='padding:6px 4px;color:#7a8599;text-align:center;font-size:10px;'>{_safe_int(r.get('days_to_target'))}일</td>"
-            f"<td style='padding:6px 4px;color:#7a8599;text-align:left;font-size:9px;'>{r.get('ma_pattern','-')}</td>"
-            f"<td style='padding:6px 4px;color:#7a8599;text-align:left;font-size:10px;'>{r.get('sector','-')}</td>"
-            "</tr>"
+    for item in items:
+        cells = "".join(
+            f"<td style='padding:3px 6px;color:#e2e8f0;font-size:10px;'>{v}</td>"
+            for v in item
         )
-
-    show_sell_ma = "sell_ma" in df.columns
-    sell_ma_header = "<th style='padding:6px 4px;color:#a78bfa;text-align:left;font-size:10px;'>MA(매도)</th>" if show_sell_ma else ""
-
+        rows.append(f"<tr style='border-bottom:1px solid #1e2530;'>{cells}</tr>")
+    title_html = f"<div style='color:#14b8a6;font-size:10px;font-weight:700;margin-bottom:4px;'>{title}</div>" if title else ""
     return f"""
-    <style>
-    .perf-wrap{{background:#0a0e14;border:1px solid #1e2530;border-radius:12px;overflow-x:auto;}}
-    .perf-table{{width:100%;border-collapse:collapse;white-space:nowrap;font-variant-numeric:tabular-nums;font-size:11px;}}
-    .perf-table thead tr{{border-bottom:2px solid #1e2530;background:#111820;}}
-    .perf-table th{{padding:6px 4px;color:#7a8599;font-size:10px;}}
-    .hl{{background:rgba(20,184,166,0.06);}}
-    </style>
-    <div class="perf-wrap">
-      <table class="perf-table">
-        <thead>
-          <tr>
-            <th style="text-align:center;">시장</th>
-            <th style="text-align:center;">날짜</th>
-            <th style="text-align:left;">종목</th>
-            <th style="text-align:left;">코드</th>
-            <th style="text-align:center;">등급</th>
-            <th style="text-align:right;">갭</th>
-            <th style="text-align:right;">진입가</th>
-            <th class="hl" style="color:#14b8a6;text-align:right;font-weight:600;">목표율</th>
-            <th style="text-align:right;">목표가</th>
-            <th style="text-align:right;">손절가</th>
-            <th style="text-align:right;">손절율</th>
-            <th class="hl" style="color:#14b8a6;text-align:center;font-weight:600;">손익비</th>
-            <th class="hl" style="color:#14b8a6;text-align:right;font-weight:600;">기대값</th>
-            <th style="text-align:right;">최고</th>
-            <th style="text-align:right;">최저</th>
-            <th style="text-align:center;">결과</th>
-            <th style="text-align:center;">소요일</th>
-            <th style="text-align:left;">MA</th>
-            {sell_ma_header}
-            <th style="text-align:left;">섹터</th>
-          </tr>
-        </thead>
-        <tbody>
-          {''.join(rows)}
-        </tbody>
+    <div>
+      {title_html}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid #2a3545;">{header}</tr></thead>
+        <tbody>{''.join(rows)}</tbody>
       </table>
     </div>
     """
 
 
+def _tooltip_wrap(value_html, preview_html):
+    return f"""
+    <div class="tooltip-wrap">
+      <div class="kpi-card">{value_html}</div>
+      <div class="tooltip-box">{preview_html}</div>
+    </div>
+    """
+
+
+def _kpi_card(label, value, value_class="neutral", preview_html=None):
+    body = f"""
+    <div class="kpi-card">
+      <div class="kpi-label">{label}</div>
+      <div class="kpi-value {value_class}">{value}</div>
+    </div>
+    """
+    if preview_html:
+        return f"""
+        <div class="tooltip-wrap">
+          {body}
+          <div class="tooltip-box">{preview_html}</div>
+        </div>
+        """
+    return body
+
+
 def render():
-    init_state()
-    trades = df_state("trades")
-    if trades.empty:
-        st.info("데이터가 없습니다.")
-        return
+    trades = st.session_state.trades.copy()
+    equity = st.session_state.equitycurve.copy() if "equitycurve" in st.session_state else pd.DataFrame()
 
-    if "date" in trades.columns:
-        trades["date"] = pd.to_datetime(trades["date"], errors="coerce")
-
-    st.markdown("### ▸ 매매 성과 분석")
     st.markdown(
         """
         <style>
-        .perf-kpi{
-            background:#0f141b;border:1px solid #1e2530;border-radius:12px;padding:14px 14px 12px 14px;
+        .kpi-card{
+            background:#111820;border:1px solid #1e2530;border-radius:12px;
+            padding:14px 14px 12px 14px;min-height:72px;
         }
-        .perf-sub{
-            color:#7a8599;font-size:12px;margin:6px 0 10px 0;
+        .kpi-label{color:#7a8599;font-size:11px;margin-bottom:6px;}
+        .kpi-value{font-size:22px;font-weight:800;line-height:1.1;color:#e2e8f0;}
+        .kpi-value.positive{color:#22c55e;}
+        .kpi-value.negative{color:#ef4444;}
+        .kpi-value.neutral{color:#e2e8f0;}
+        .tooltip-wrap{position:relative;}
+        .tooltip-box{
+            display:none;position:absolute;z-index:20;left:0;top:110%;
+            width:340px;max-width:340px;background:#0a0e14;border:1px solid #1e2530;
+            border-radius:10px;padding:10px;box-shadow:0 16px 40px rgba(0,0,0,.35);
         }
+        .tooltip-wrap:hover .tooltip-box{display:block;}
+        .tooltip-box table{font-size:10px;}
+        .tooltip-box th,.tooltip-box td{padding:3px 4px;white-space:nowrap;}
+        .section-title{font-size:16px;font-weight:800;color:#e2e8f0;margin:4px 0 10px 0;}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
-    total_cnt = len(trades)
-    win_cnt = int((trades["result"] == "승").sum()) if "result" in trades.columns else 0
-    lose_cnt = int((trades["result"] == "패").sum()) if "result" in trades.columns else 0
-    ing_cnt = int((trades["result"] == "잉").sum()) if "result" in trades.columns else 0
-    win_rate = (win_cnt / max(win_cnt + lose_cnt, 1)) * 100 if (win_cnt + lose_cnt) else 0
-    rr_avg = _safe_num(trades["rr_ratio"].mean()) if "rr_ratio" in trades.columns else 0.0
-    ev_avg = _safe_num(trades["expected_value"].mean()) if "expected_value" in trades.columns else 0.0
+    st.markdown("### ▸ 매매성과")
 
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">총 매매</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{total_cnt}건</div></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">승/패</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{win_cnt}/{lose_cnt}</div></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">진행중</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{ing_cnt}건</div></div>', unsafe_allow_html=True)
-    c4.markdown(f'<div class="perf-kpi"><div style="color:#7a8599;font-size:12px;">승률</div><div style="font-size:28px;font-weight:700;color:#e2e8f0;">{win_rate:.1f}%</div></div>', unsafe_allow_html=True)
+    if trades.empty:
+        st.info("데이터가 없습니다.")
+        return
 
-    st.markdown(f'<div class="perf-sub">수익 인자: RR, 기대값, MA 패턴, 섹터, 보유기간 기준으로 성과를 해석합니다. / RR 평균 {rr_avg:.2f}, 기대값 {ev_avg:.1f}</div>', unsafe_allow_html=True)
+    completed = trades[trades["result"].isin(["승", "패"])].copy()
+    wins = completed[completed["result"] == "승"].copy()
+    losses = completed[completed["result"] == "패"].copy()
 
-    fig = go.Figure()
-    if "profit_pct" in trades.columns and "result" in trades.columns:
-        win = trades[trades["result"] == "승"]
-        lose = trades[trades["result"] == "패"]
+    total = len(completed)
+    wincount = len(wins)
+    losscount = len(losses)
+    winrate = (wincount / total * 100) if total else 0.0
 
-        if not win.empty:
+    avg_peak = completed["peakpct"].mean() if "peakpct" in completed.columns and total else 0.0
+    avg_low = completed["minlowpct"].mean() if "minlowpct" in completed.columns and total else 0.0
+    avg_win_peak = wins["peakpct"].mean() if "peakpct" in wins.columns and wincount else 0.0
+    avg_loss_low = losses["minlowpct"].mean() if "minlowpct" in losses.columns and losscount else 0.0
+    avg_days_win = wins["daystotarget"].mean() if "daystotarget" in wins.columns and wincount else 0.0
+    avg_days_loss = losses["daystotarget"].mean() if "daystotarget" in losses.columns and losscount else 0.0
+
+    total_eq = equity.copy()
+    max_dd_pct = 0.0
+    if not total_eq.empty and "date" in total_eq.columns and "value" in total_eq.columns:
+        total_eq = total_eq.groupby("date")["value"].sum().reset_index()
+        max_val = total_eq["value"].max()
+        if max_val != 0:
+            max_dd_pct = ((max_val - total_eq["value"].min()) / max_val) * 100
+
+    profit_factor = 0.0
+    if wincount and losscount and avg_win_peak != 0 and avg_loss_low != 0:
+        profit_factor = abs(avg_win_peak / avg_loss_low)
+
+    recent_wins = wins.sort_values("date", ascending=False).head(7) if not wins.empty else pd.DataFrame()
+    recent_losses = losses.sort_values("date", ascending=False).head(7) if not losses.empty else pd.DataFrame()
+    top_peak = completed.sort_values("peakpct", ascending=False).head(7) if "peakpct" in completed.columns else pd.DataFrame()
+    worst_low = completed.sort_values("minlowpct", ascending=True).head(7) if "minlowpct" in completed.columns else pd.DataFrame()
+    top_days_win = wins.sort_values("daystotarget", ascending=True).head(7) if "daystotarget" in wins.columns else pd.DataFrame()
+    worst_dd = completed.sort_values("minlowpct", ascending=True).head(7) if "minlowpct" in completed.columns else pd.DataFrame()
+
+    avg_rr_wins = wins["rr_ratio"].mean() if "rr_ratio" in wins.columns and wincount else 0.0
+    avg_ev_wins = wins["expected_value"].mean() if "expected_value" in wins.columns and wincount else 0.0
+    avg_rr_losses = losses["rr_ratio"].mean() if "rr_ratio" in losses.columns and losscount else 0.0
+    avg_ev_losses = losses["expected_value"].mean() if "expected_value" in losses.columns and losscount else 0.0
+
+    def _trade_preview(df, mode="winrate"):
+        if df.empty:
+            return "<div style='color:#7a8599;font-size:10px;'>데이터 없음</div>"
+        cols = ["매도일", "종목", "손익율"]
+        if "rr_ratio" in df.columns:
+            cols += ["RR"]
+        if "expected_value" in df.columns:
+            cols += ["EV"]
+        rows = []
+        for _, r in df.iterrows():
+            row = [
+                fmt_date_short(r.get("date")),
+                str(r.get("name", "-")),
+                _fmt_pct(r.get("peakpct", r.get("minlowpct", 0))),
+            ]
+            if "rr_ratio" in df.columns:
+                row.append(_fmt_rr(r.get("rr_ratio")))
+            if "expected_value" in df.columns:
+                row.append(f"{_safe_num(r.get('expected_value')):.1f}")
+            rows.append(row)
+        return _preview_table(rows, cols)
+
+    def _peak_preview(df):
+        if df.empty:
+            return "<div style='color:#7a8599;font-size:10px;'>데이터 없음</div>"
+        rows = [[fmt_date_short(r.get("date")), r.get("name", "-"), _fmt_pct(r.get("peakpct", 0))] for _, r in df.iterrows()]
+        return _preview_table(rows, ["매도일", "종목", "최고수익"], "최고수익 상위 7")
+
+    def _low_preview(df):
+        if df.empty:
+            return "<div style='color:#7a8599;font-size:10px;'>데이터 없음</div>"
+        rows = [[fmt_date_short(r.get("date")), r.get("name", "-"), _fmt_pct(r.get("minlowpct", 0))] for _, r in df.iterrows()]
+        return _preview_table(rows, ["매도일", "종목", "최저수익"], "최저수익 하위 7")
+
+    def _days_preview(df, by="ev"):
+        if df.empty:
+            return "<div style='color:#7a8599;font-size:10px;'>데이터 없음</div>"
+        rows = []
+        for _, r in df.iterrows():
+            rows.append([
+                fmt_date_short(r.get("date")),
+                r.get("name", "-"),
+                f"{_safe_int(r.get('daystotarget'))}일",
+                f"{_safe_num(r.get('expected_value')):.1f}",
+                _fmt_rr(r.get("rr_ratio")),
+            ])
+        return _preview_table(rows, ["매도일", "종목", "소요일", "EV", "RR"], "오름차순 7")
+
+    cols1 = st.columns(4)
+    with cols1[0]:
+        st.markdown(_kpi_card("총거래건수", f"{total}건", "neutral", _trade_preview(completed)), unsafe_allow_html=True)
+    with cols1[1]:
+        st.markdown(_kpi_card("승리", f"{wincount}건", "positive", _trade_preview(wins)), unsafe_allow_html=True)
+    with cols1[2]:
+        st.markdown(_kpi_card("패배", f"{losscount}건", "negative", _trade_preview(losses)), unsafe_allow_html=True)
+    with cols1[3]:
+        st.markdown(_kpi_card("승률", f"{winrate:.1f}%", "neutral"), unsafe_allow_html=True)
+
+    cols2 = st.columns(4)
+    with cols2[0]:
+        st.markdown(_kpi_card("평균 최고 수익", f"{avg_peak:.1f}%", "positive", _peak_preview(top_peak)), unsafe_allow_html=True)
+    with cols2[1]:
+        st.markdown(_kpi_card("평균 최저 수익", f"{avg_low:.1f}%", "negative", _low_preview(worst_low)), unsafe_allow_html=True)
+    with cols2[2]:
+        st.markdown(_kpi_card("승리 평균 소요일", f"{avg_days_win:.1f}일", "neutral", _days_preview(top_days_win)), unsafe_allow_html=True)
+    with cols2[3]:
+        st.markdown(_kpi_card("패배 평균 소요일", f"{avg_days_loss:.1f}일", "neutral", _days_preview(top_days_win)), unsafe_allow_html=True)
+
+    cols3 = st.columns(4)
+    with cols3[0]:
+        st.markdown(_kpi_card("승리 평균 최고수익", f"{avg_win_peak:.1f}%", "positive"), unsafe_allow_html=True)
+    with cols3[1]:
+        st.markdown(_kpi_card("패배 평균 최저수익", f"{avg_loss_low:.1f}%", "negative"), unsafe_allow_html=True)
+    with cols3[2]:
+        st.markdown(_kpi_card("최대 낙폭", f"{max_dd_pct:.1f}%", "negative", _preview_table(
+            [[r.get("name", "-"), _fmt_rr(r.get("rr_ratio")), f"{_safe_int(r.get('daystotarget'))}일"] for _, r in worst_dd.iterrows()],
+            ["종목", "RR", "소요일"],
+            "최대낙폭 오름차순 7"
+        )), unsafe_allow_html=True)
+    with cols3[3]:
+        st.markdown(_kpi_card("손익비", f"{profit_factor:.2f}", "positive"), unsafe_allow_html=True)
+
+    st.markdown("#### ▸ RR / 기대값 구간별 성과")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if "rr_ratio" in completed.columns and completed["rr_ratio"].notna().any():
+            bins = [0, 1.5, 2.5, 3.5, 100]
+            labels = ["0-1.5", "1.5-2.5", "2.5-3.5", "3.5+"]
+            tmp = completed.copy()
+            tmp["rr_bin"] = pd.cut(tmp["rr_ratio"], bins=bins, labels=labels, right=False)
+            stats = []
+            for lbl in labels:
+                s = tmp[tmp["rr_bin"] == lbl]
+                if len(s):
+                    stats.append([lbl, len(s), s["result"].eq("승").mean() * 100, s["peakpct"].mean()])
+            if stats:
+                gs = pd.DataFrame(stats, columns=["구간", "건수", "승률", "평균최고수익"])
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=gs["구간"],
+                    y=gs["승률"],
+                    marker_color="rgba(20,184,166,0.60)",
+                    text=[f"{v:.0f}" for v in gs["승률"]],
+                    textposition="outside",
+                ))
+                fig.add_trace(go.Scatter(
+                    x=gs["구간"],
+                    y=gs["평균최고수익"],
+                    mode="lines+markers",
+                    line=dict(color="#34d399", width=2),
+                    marker=dict(size=7),
+                    yaxis="y2",
+                ))
+                fig.update_layout(
+                    height=300,
+                    plot_bgcolor="#0a0e14",
+                    paper_bgcolor="#0a0e14",
+                    margin=dict(l=0, r=40, t=10, b=0),
+                    bargap=0.3,
+                    xaxis=dict(color="#7a8599"),
+                    yaxis=dict(color="#7a8599", showgrid=True, gridcolor="#1e2530"),
+                    yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#34d399"),
+                    font=dict(color="#e2e8f0"),
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+        else:
+            st.info("RR 데이터 없음")
+
+    with col2:
+        if "expected_value" in completed.columns and completed["expected_value"].notna().any():
+            bins = [0, 5, 15, 30, 1000]
+            labels = ["0-5", "5-15", "15-30", "30+"]
+            tmp = completed.copy()
+            tmp["ev_bin"] = pd.cut(tmp["expected_value"], bins=bins, labels=labels, right=False)
+            stats = []
+            for lbl in labels:
+                s = tmp[tmp["ev_bin"] == lbl]
+                if len(s):
+                    stats.append([lbl, len(s), s["result"].eq("승").mean() * 100, s["peakpct"].mean()])
+            if stats:
+                es = pd.DataFrame(stats, columns=["구간", "건수", "승률", "평균최고수익"])
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=es["구간"],
+                    y=es["승률"],
+                    marker_color="rgba(20,184,166,0.60)",
+                    text=[f"{v:.0f}" for v in es["승률"]],
+                    textposition="outside",
+                ))
+                fig.add_trace(go.Scatter(
+                    x=es["구간"],
+                    y=es["평균최고수익"],
+                    mode="lines+markers",
+                    line=dict(color="#34d399", width=2),
+                    marker=dict(size=7),
+                    yaxis="y2",
+                ))
+                fig.update_layout(
+                    height=300,
+                    plot_bgcolor="#0a0e14",
+                    paper_bgcolor="#0a0e14",
+                    margin=dict(l=0, r=40, t=10, b=0),
+                    bargap=0.3,
+                    xaxis=dict(color="#7a8599"),
+                    yaxis=dict(color="#7a8599", showgrid=True, gridcolor="#1e2530"),
+                    yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#34d399"),
+                    font=dict(color="#e2e8f0"),
+                )
+                st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("기대값 데이터 없음")
+
+    st.markdown("#### ▸ MA / 섹터 성과")
+
+    col3, col4 = st.columns(2)
+
+    with col3:
+        if "mapattern" in completed.columns:
+            mg = completed.groupby("mapattern").agg(
+                count=("result", "count"),
+                winrate=("result", lambda x: (x == "승").mean() * 100),
+                avg_peak=("peakpct", "mean"),
+                avg_low=("minlowpct", "mean"),
+            ).reset_index()
+            mg = mg.sort_values("count", ascending=False)
+            st.dataframe(mg, use_container_width=True, hide_index=True)
+        else:
+            st.info("MA 데이터 없음")
+
+    with col4:
+        if "sector" in completed.columns:
+            sg = completed.groupby("sector").agg(
+                count=("result", "count"),
+                winrate=("result", lambda x: (x == "승").mean() * 100),
+                avg_peak=("peakpct", "mean"),
+            ).reset_index()
+            sg = sg.sort_values("count", ascending=False)
+
+            fig = go.Figure()
             fig.add_trace(go.Bar(
-                x=win["date"],
-                y=win["profit_pct"],
-                name="승리",
-                marker_color="#22c55e",
-                hovertemplate="날짜: %{x|%m/%d}<br>수익: %{y:.2f}%<extra></extra>",
+                x=sg["sector"],
+                y=sg["count"],
+                marker_color="rgba(20,184,166,0.60)",
+                text=sg["count"],
+                textposition="outside",
             ))
-        if not lose.empty:
-            fig.add_trace(go.Bar(
-                x=lose["date"],
-                y=lose["profit_pct"],
-                name="패배",
-                marker_color="#7f1d1d",
-                hovertemplate="날짜: %{x|%m/%d}<br>수익: %{y:.2f}%<extra></extra>",
+            fig.add_trace(go.Scatter(
+                x=sg["sector"],
+                y=sg["winrate"],
+                mode="lines+markers",
+                line=dict(color="#a7f3d0", width=2),
+                marker=dict(size=7),
+                yaxis="y2",
             ))
-
-    if "equity" in trades.columns:
-        fig.add_trace(go.Scatter(
-            x=trades["date"],
-            y=trades["equity"],
-            name="누적",
-            mode="lines+markers",
-            line=dict(color="#38bdf8", width=2),
-            hovertemplate="날짜: %{x|%m/%d}<br>누적: %{y:.2f}<extra></extra>",
-        ))
-
-    fig.update_layout(
-        template="plotly_dark",
-        barmode="group",
-        hovermode="x unified",
-        height=420,
-        margin=dict(l=20, r=20, t=30, b=20),
-        paper_bgcolor="#0a0e14",
-        plot_bgcolor="#0a0e14",
-        legend=dict(orientation="h", y=1.05),
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.markdown("#### ▸ 거래 상세")
-    st.components.v1.html(_html_table(trades), height=min(800, 44 + len(trades) * 34), scrolling=True)
+            fig.update_layout(
+                height=300,
+                plot_bgcolor="#0a0e14",
+                paper_bgcolor="#0a0e14",
+                margin=dict(l=0, r=40, t=10, b=0),
+                bargap=0.3,
+                xaxis=dict(color="#7a8599"),
+                yaxis=dict(color="#7a8599", showgrid=True, gridcolor="#1e2530"),
+                yaxis2=dict(overlaying="y", side="right", showgrid=False, color="#a7f3d0"),
+                font=dict(color="#e2e8f0"),
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("섹터 데이터 없음")
