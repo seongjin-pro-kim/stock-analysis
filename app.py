@@ -1,18 +1,23 @@
 """GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit final app.py"""
+import os, streamlit as st
 
-import os
-import sys
-import importlib.util
-import streamlit as st
-import pandas as pd
+for _f in sorted(os.listdir(os.path.dirname(os.path.abspath(__file__)))):
+    st.text(repr(_f))
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
-    st.write("## 현재 파일 목록 (repr)")
-for f in sorted(files):
-    st.text(repr(f))
 st.stop()
+#import os
+#import sys
+#import importlib.util
+#import streamlit as st
+#import pandas as pd
+
+#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#if BASE_DIR not in sys.path:
+#    sys.path.insert(0, BASE_DIR)
+#    st.write("## 현재 파일 목록 (repr)")
+#for f in sorted(files):
+#    st.text(repr(f))
+#st.stop()
 
 def load_module(name, filename):
     path = os.path.join(BASE_DIR, filename)
