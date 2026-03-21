@@ -163,7 +163,8 @@ def _one_line_badge(text, color):
 
 def render():
     trades = st.session_state.trades.copy()
-    equity = st.session_state.equity_curve.copy()
+    equity = st.session_state.get("equitycurve", st.session_state.get("equity_curve", pd.DataFrame())).copy()
+
     positions = st.session_state.positions.copy()
     signal_archive = st.session_state.signal_archive.copy()
 
