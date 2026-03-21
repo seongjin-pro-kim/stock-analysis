@@ -161,12 +161,12 @@ with st.sidebar:
     page = st.radio(
         "페이지",
         [
-            "🏠 Overview",
-            "📋 Trade Log",
-            "📊 Performance",
-            "⚠️ Risk",
-            "📈 Signals",
-            "🌍 Market",
+            "🏠 대시보드",
+            "📋 매매기록",
+            "📊 성과분석",
+            "⚠️ 리스크",
+            "📈 시그널",
+            "🌍 마켓",
         ],
         key="nav_page",
         label_visibility="collapsed",
@@ -174,9 +174,10 @@ with st.sidebar:
     st.markdown("---")
     st.caption("GAP R-Zone 6.5")
 
-if   page == "🏠 Overview":    render_overview()
-elif page == "📋 Trade Log":   render_trade_log()
-elif page == "📊 Performance": render_performance()
-elif page == "⚠️ Risk":        render_risk()
-elif page == "📈 Signals":     render_signals()
-elif page == "🌍 Market":      render_market()
+if   page == "🏠 대시보드":  render_overview()
+elif page == "📋 매매기록":  render_trade_log()
+elif page == "📊 성과분석":  render_performance()
+elif page == "⚠️ 리스크":   render_risk()
+elif page == "📈 시그널":    render_signals()
+elif page == "🌍 마켓":      render_market()
+
