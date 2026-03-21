@@ -56,6 +56,25 @@ def _sparkline(values, color):
     return fig
 
 
+def _best_ma_cards(trades):
+    if trades.empty or "ma_pattern" not in trades.columns or "result" not in trades.columns:
+        return []
+    df = trades[trades["result"].isin(["승", "패"])].copy()
+    if df.empty:
+        return []
+    if "peak_pct" not in df.columns:
+        df["peak_pct"] = np.nan
+    g = df.groupby("ma_pattern").agg(
+        wins=("result", lambda s: (s == "승").sum()),
+        total=("result", "count"),
+        avg_ret=("peak_pct", "mean"),
+    ).reset_index()
+    top_wins = g.sort_values(["wins", "avg_ret"], ascending=[False, False]).head(1)
+    top_avg = g.sort_values(["avg_ret", "wins"], ascending=[False, False]).head(1)
+    picked = pd.concat([top_wins, top_avg]).drop_duplicates("ma_pattern")
+    return picked.sort_values(["wins", "avg_ret"], ascending=[False, False]).head(2).to_dict("records")
+
+
 def render():
     trades = st.session_state.trades.copy()
     equity = st.session_state.equity_curve.copy()
@@ -67,6 +86,8 @@ def render():
         equity["date"] = pd.to_datetime(equity["date"], errors="coerce")
     if "signal_date" in signal_archive.columns:
         signal_archive["signal_date"] = pd.to_datetime(signal_archive["signal_date"], errors="coerce")
+    if "expiry_date" in trades.columns:
+        trades["expiry_date"] = pd.to_datetime(trades["expiry_date"], errors="coerce")
 
     st.markdown("### ▸ 메인 대시보드")
 
@@ -77,7 +98,6 @@ def render():
         {"name": "NASDAQ", "value": 18245.80, "change": 85.50, "color": "#6aada5", "series": [17980, 18060, 18140, 18210, 18246]},
         {"name": "BTC", "value": 70416.89, "change": 1046.75, "color": "#b8a96a", "series": [68200, 68850, 69400, 70050, 70417]},
     ]
-
     cols = st.columns(4)
     for c, cfg in zip(cols, idx_configs):
         sign = "+" if cfg["change"] >= 0 else ""
@@ -103,20 +123,65 @@ def render():
     rr_avg = _safe_num(trades["rr_ratio"].mean()) if "rr_ratio" in trades.columns else 0.0
     ev_avg = _safe_num(trades["expected_value"].mean()) if "expected_value" in trades.columns else 0.0
 
-    k1, k2, k3, k4, k5, k6 = st.columns(6)
+    ma_best = _best_ma_cards(trades)
+    k1, k2, k3, k4, k5, k6, k7, k8 = st.columns(8)
     k1.metric("총 매매", f"{total}건")
     k2.metric("승/패", f"{win_cnt}/{lose_cnt}")
     k3.metric("진행중", f"{ing_cnt}건")
     k4.metric("승률", f"{win_rate:.1f}%")
     k5.metric("RR 평균", f"{rr_avg:.2f}")
     k6.metric("기대값", f"{ev_avg:.1f}")
+    if len(ma_best) >= 1:
+        k7.markdown(_card("Best MA", f"{ma_best[0]['ma_pattern']}", f"승 {int(ma_best[0]['wins'])} / 평균 {ma_best[0]['avg_ret']:.1f}%", "#6aad8a"), unsafe_allow_html=True)
+    else:
+        k7.markdown(_card("Best MA", "-", "데이터 없음", "#566270"), unsafe_allow_html=True)
+    if len(ma_best) >= 2:
+        k8.markdown(_card("", f"{ma_best[1]['ma_pattern']}", f"승 {int(ma_best[1]['wins'])} / 평균 {ma_best[1]['avg_ret']:.1f}%", "#6aada5"), unsafe_allow_html=True)
+    else:
+        k8.markdown(_card("", "-", "", "#566270"), unsafe_allow_html=True)
 
-    left, right = st.columns(2)
+    st.markdown("#### ▸ 옵션 만기 / 주요 이벤트")
+    if not trades.empty and any(c in trades.columns for c in ["expiry_date", "event"]):
+        ev = trades.copy()
+        if "expiry_date" in ev.columns:
+            ev = ev.sort_values("expiry_date", ascending=True)
+        ev = ev[[c for c in ["market", "name", "expiry_date", "event"] if c in ev.columns]].head(5)
+        rows = []
+        for _, r in ev.iterrows():
+            rows.append(
+                "<tr>"
+                f"<td style='padding:6px 5px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
+                f"<td style='padding:6px 5px;color:#dde3ed;font-weight:600;'>{r.get('name','-')}</td>"
+                f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{fmt_date_short(r.get('expiry_date'))}</td>"
+                f"<td style='padding:6px 5px;color:#7a8599;text-align:left;'>{r.get('event','-')}</td>"
+                "</tr>"
+            )
+        st.markdown(
+            f"""
+            <div class="table-wrap">
+            <table class="table-dark">
+            <thead><tr>
+                <th style="text-align:center;">시장</th>
+                <th style="text-align:left;">종목</th>
+                <th style="text-align:center;">만기일</th>
+                <th style="text-align:left;">이벤트</th>
+            </tr></thead>
+            <tbody>{''.join(rows)}</tbody>
+            </table>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.info("옵션 만기 / 이벤트 데이터가 없습니다.")
+
+    st.markdown("#### ▸ 최근 매매 / Signal Archive")
+    left, right = st.columns([1, 1])
 
     with left:
-        st.markdown("#### ▸ 최근 매매")
+        st.markdown("최근 매매")
         if not trades.empty:
-            recent = trades.sort_values("date", ascending=False).head(8) if "date" in trades.columns else trades.head(8)
+            recent = trades.sort_values("date", ascending=False).head(10) if "date" in trades.columns else trades.head(10)
             rows = []
             for _, r in recent.iterrows():
                 rows.append(
@@ -128,10 +193,8 @@ def render():
                     f"<td style='padding:6px 5px;color:#6aada5;font-weight:600;text-align:right;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
                     f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:700;text-align:center;'>{_safe_num(r.get('rr_ratio')):.2f}</td>"
                     f"<td style='padding:6px 5px;text-align:center;'>{result_badge(r.get('result','-'))}</td>"
-                    f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('peak_pct')):+.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('progress_pct', r.get('peak_pct', 0))):+.1f}%</td>"
                     f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{_safe_int(r.get('days_to_target'))}일</td>"
-                    f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('ma_pattern','-')}</td>"
-                    f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('sector','-')}</td>"
                     "</tr>"
                 )
             st.markdown(
@@ -142,14 +205,12 @@ def render():
                     <th style="text-align:center;">시장</th>
                     <th style="text-align:center;">날짜</th>
                     <th style="text-align:left;">종목</th>
-                    <th style="text-align:right;">갭</th>
+                    <th style="text-align:right;">갭비율</th>
                     <th style="text-align:right;color:#6aada5;">목표율</th>
                     <th style="text-align:center;color:#8fbf8f;">손익비</th>
                     <th style="text-align:center;">결과</th>
-                    <th style="text-align:right;">최고</th>
+                    <th style="text-align:right;">현재 수익</th>
                     <th style="text-align:center;">소요일</th>
-                    <th style="text-align:left;">MA</th>
-                    <th style="text-align:left;">섹터</th>
                 </tr></thead>
                 <tbody>{''.join(rows)}</tbody>
                 </table>
@@ -158,12 +219,12 @@ def render():
                 unsafe_allow_html=True,
             )
         else:
-            st.info("매매 데이터가 없습니다.")
+            st.info("최근 매매 데이터가 없습니다.")
 
     with right:
-        st.markdown("#### ▸ Signal Archive")
+        st.markdown("Siganl Achive")
         if not signal_archive.empty:
-            view = signal_archive.sort_values("signal_date", ascending=False).head(8) if "signal_date" in signal_archive.columns else signal_archive.head(8)
+            view = signal_archive.sort_values("signal_date", ascending=False).head(10) if "signal_date" in signal_archive.columns else signal_archive.head(10)
             rows = []
             for _, r in view.iterrows():
                 rows.append(
@@ -184,13 +245,13 @@ def render():
                 <table class="table-dark">
                 <thead><tr>
                     <th style="text-align:center;">시장</th>
-                    <th style="text-align:center;">날짜</th>
-                    <th style="text-align:left;">종목</th>
-                    <th style="text-align:right;">갭%</th>
+                    <th style="text-align:center;">sig. date</th>
+                    <th style="text-align:left;">종목명</th>
+                    <th style="text-align:right;">갭비율</th>
                     <th style="text-align:right;color:#6aada5;">목표율</th>
                     <th style="text-align:right;color:#8fbf8f;">진행율</th>
                     <th style="text-align:center;">소요일</th>
-                    <th style="text-align:center;">결과</th>
+                    <th style="text-align:center;">목표 결과</th>
                 </tr></thead>
                 <tbody>{''.join(rows)}</tbody>
                 </table>
@@ -203,21 +264,48 @@ def render():
 
     st.markdown("#### ▸ 계좌별 자산추이")
     if not equity.empty:
+        if "account" in equity.columns:
+            acc_col = "account"
+        elif "account_id" in equity.columns:
+            acc_col = "account_id"
+        elif "acct" in equity.columns:
+            acc_col = "acct"
+        else:
+            acc_col = None
+
+        y_col = None
+        for cand in ["equity", "asset", "balance", "value"]:
+            if cand in equity.columns:
+                y_col = cand
+                break
+
         fig = go.Figure()
-        for col, color in [("account1", "#7a9fc0"), ("account2", "#9b8fc4"), ("account3", "#6aada5")]:
-            if col in equity.columns:
+        if acc_col and y_col and "date" in equity.columns:
+            eq = equity.copy()
+            eq["date"] = pd.to_datetime(eq["date"], errors="coerce")
+            eq[acc_col] = eq[acc_col].astype(str).str.replace(r"\D", "", regex=True).str[-4:]
+            palette = ["#7a9fc0", "#9b8fc4", "#6aada5", "#b8a96a"]
+            for i, (acc, sub) in enumerate(eq.dropna(subset=["date"]).sort_values("date").groupby(acc_col)):
                 fig.add_trace(go.Scatter(
-                    x=equity["date"] if "date" in equity.columns else equity.index,
-                    y=equity[col],
-                    name=col,
+                    x=sub["date"],
+                    y=sub[y_col],
+                    name=str(acc),
                     mode="lines",
-                    line=dict(width=2, color=color),
-                    hovertemplate=f"{col}: %{{y:,.0f}}<extra></extra>",
+                    line=dict(width=2, color=palette[i % len(palette)]),
+                    hovertemplate=f"{acc}: %{{y:,.0f}}<extra></extra>",
                 ))
+        elif y_col and "date" in equity.columns:
+            fig.add_trace(go.Scatter(
+                x=equity["date"],
+                y=equity[y_col],
+                name=y_col,
+                mode="lines",
+                line=dict(width=2, color="#7a9fc0"),
+            ))
         fig.update_layout(
             template="plotly_dark",
             hovermode="x unified",
-            height=280,
+            height=300,
             margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor="#0a0e14",
             plot_bgcolor="#0a0e14",
