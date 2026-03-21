@@ -1,47 +1,13 @@
-"""GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit final app.py"""
-import os, streamlit as st
+"""GAP R-Zone 6.5 트레이딩 대시보드"""
+
+import os
+import sys
+import streamlit as st
+import pandas as pd
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-st.write("## root")
-for _f in sorted(os.listdir(BASE_DIR)):
-    st.text(repr(_f))
-
-views_dir = os.path.join(BASE_DIR, "views")
-if os.path.isdir(views_dir):
-    st.write("## views")
-    for _f in sorted(os.listdir(views_dir)):
-        st.text(repr(_f))
-
-st.stop()
-#import os
-#import sys
-#import importlib.util
-#import streamlit as st
-#import pandas as pd
-
-#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-#if BASE_DIR not in sys.path:
-#    sys.path.insert(0, BASE_DIR)
-#    st.write("## 현재 파일 목록 (repr)")
-#for f in sorted(files):
-#    st.text(repr(f))
-#st.stop()
-
-def load_module(name, filename):
-    path = os.path.join(BASE_DIR, filename)
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-overview   = load_module("overview",    "overview-7.py")
-trade_log  = load_module("trade_log",   "trade_log-4.py")
-perf       = load_module("performance", "performance.py")
-risk       = load_module("risk",        "risk-2.py")
-signals    = load_module("signals",     "signals-3.py")
-market     = load_module("market",      "market-6.py")
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 from sample_data import (
     get_sample_trades,
@@ -50,6 +16,12 @@ from sample_data import (
     get_sample_signals,
     get_sample_signal_archive,
 )
+from views.overview    import render as render_overview
+from views.trade_log   import render as render_trade_log
+from views.performance import render as render_performance
+from views.risk        import render as render_risk
+from views.signals     import render as render_signals
+from views.market      import render as render_market
 
 st.set_page_config(
     page_title="GAP R-Zone Dashboard",
@@ -175,14 +147,14 @@ if "trades" not in st.session_state:
     else:
         st.session_state.trades = get_sample_trades()
 
-if "equity_curve"    not in st.session_state:
-    st.session_state.equity_curve    = get_sample_equity_curve()
-if "positions"       not in st.session_state:
-    st.session_state.positions       = get_sample_positions()
-if "signals"         not in st.session_state:
-    st.session_state.signals         = get_sample_signals()
-if "signal_archive"  not in st.session_state:
-    st.session_state.signal_archive  = get_sample_signal_archive()
+if "equity_curve"   not in st.session_state:
+    st.session_state.equity_curve   = get_sample_equity_curve()
+if "positions"      not in st.session_state:
+    st.session_state.positions      = get_sample_positions()
+if "signals"        not in st.session_state:
+    st.session_state.signals        = get_sample_signals()
+if "signal_archive" not in st.session_state:
+    st.session_state.signal_archive = get_sample_signal_archive()
 
 with st.sidebar:
     st.markdown("### ▸ Navigation")
@@ -202,9 +174,9 @@ with st.sidebar:
     st.markdown("---")
     st.caption("GAP R-Zone 6.5")
 
-if   page == "🏠 Overview":    overview.render()
-elif page == "📋 Trade Log":   trade_log.render()
-elif page == "📊 Performance": perf.render()
-elif page == "⚠️ Risk":        risk.render()
-elif page == "📈 Signals":     signals.render()
-elif page == "🌍 Market":      market.render()
+if   page == "🏠 Overview":    render_overview()
+elif page == "📋 Trade Log":   render_trade_log()
+elif page == "📊 Performance": render_performance()
+elif page == "⚠️ Risk":        render_risk()
+elif page == "📈 Signals":     render_signals()
+elif page == "🌍 Market":      render_market()
