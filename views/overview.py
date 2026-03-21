@@ -35,9 +35,30 @@ def _card(title, value, delta=None, delta_color="#9aa5b4"):
     """
 
 
+def _sparkline(values, color):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=list(range(len(values))),
+        y=values,
+        mode="lines",
+        line=dict(color=color, width=2),
+        hoverinfo="skip",
+    ))
+    fig.update_layout(
+        template="plotly_dark",
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=56,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(visible=False, fixedrange=True),
+        yaxis=dict(visible=False, fixedrange=True),
+    )
+    return fig
+
+
 def render():
-    trades        = st.session_state.trades.copy()
-    equity        = st.session_state.equity_curve.copy()
+    trades = st.session_state.trades.copy()
+    equity = st.session_state.equity_curve.copy()
     signal_archive = st.session_state.signal_archive.copy()
 
     if "date" in trades.columns:
@@ -49,14 +70,14 @@ def render():
 
     st.markdown("### ▸ 메인 대시보드")
 
-    # ── 시장 지표 카드 ────────────────────────────────────
     st.markdown("#### ▸ 주요 시장 지표")
     idx_configs = [
-        {"name": "KOSPI",  "value": 2685.42,  "change": 12.35,   "color": "#7a9fc0"},
-        {"name": "KOSDAQ", "value": 872.15,   "change": -3.21,   "color": "#9b8fc4"},
-        {"name": "NASDAQ", "value": 18245.80, "change": 85.50,   "color": "#6aada5"},
-        {"name": "BTC",    "value": 87420.50, "change": 1250.30, "color": "#b8a96a"},
+        {"name": "KOSPI", "value": 5781.00, "change": 17.80, "color": "#7a9fc0", "series": [5650, 5688, 5720, 5756, 5781]},
+        {"name": "KOSDAQ", "value": 1156.46, "change": 0.34, "color": "#9b8fc4", "series": [1122, 1130, 1141, 1152, 1156]},
+        {"name": "NASDAQ", "value": 18245.80, "change": 85.50, "color": "#6aada5", "series": [17980, 18060, 18140, 18210, 18246]},
+        {"name": "BTC", "value": 70416.89, "change": 1046.75, "color": "#b8a96a", "series": [68200, 68850, 69400, 70050, 70417]},
     ]
+
     cols = st.columns(4)
     for c, cfg in zip(cols, idx_configs):
         sign = "+" if cfg["change"] >= 0 else ""
@@ -71,114 +92,115 @@ def render():
             value = f"{cfg['value']:,.2f}"
             delta = f"{sign}{cfg['change']:.2f}"
         c.markdown(_card(cfg["name"], value, delta, d_color), unsafe_allow_html=True)
+        c.plotly_chart(_sparkline(cfg["series"], cfg["color"]), use_container_width=True)
 
-    # ── 핵심 KPI ─────────────────────────────────────────
     st.markdown("#### ▸ 핵심 KPI")
-    total    = len(trades)
-    win_cnt  = int((trades["result"] == "승").sum()) if "result" in trades.columns else 0
+    total = len(trades)
+    win_cnt = int((trades["result"] == "승").sum()) if "result" in trades.columns else 0
     lose_cnt = int((trades["result"] == "패").sum()) if "result" in trades.columns else 0
-    ing_cnt  = int((trades["result"] == "잉").sum()) if "result" in trades.columns else 0
+    ing_cnt = int((trades["result"] == "잉").sum()) if "result" in trades.columns else 0
     win_rate = (win_cnt / max(win_cnt + lose_cnt, 1)) * 100
-    rr_avg   = _safe_num(trades["rr_ratio"].mean()) if "rr_ratio" in trades.columns else 0.0
-    ev_avg   = _safe_num(trades["expected_value"].mean()) if "expected_value" in trades.columns else 0.0
+    rr_avg = _safe_num(trades["rr_ratio"].mean()) if "rr_ratio" in trades.columns else 0.0
+    ev_avg = _safe_num(trades["expected_value"].mean()) if "expected_value" in trades.columns else 0.0
 
     k1, k2, k3, k4, k5, k6 = st.columns(6)
-    k1.metric("총 매매",  f"{total}건")
-    k2.metric("승/패",    f"{win_cnt}/{lose_cnt}")
-    k3.metric("진행중",   f"{ing_cnt}건")
-    k4.metric("승률",     f"{win_rate:.1f}%")
-    k5.metric("RR 평균",  f"{rr_avg:.2f}")
-    k6.metric("기대값",   f"{ev_avg:.1f}")
+    k1.metric("총 매매", f"{total}건")
+    k2.metric("승/패", f"{win_cnt}/{lose_cnt}")
+    k3.metric("진행중", f"{ing_cnt}건")
+    k4.metric("승률", f"{win_rate:.1f}%")
+    k5.metric("RR 평균", f"{rr_avg:.2f}")
+    k6.metric("기대값", f"{ev_avg:.1f}")
 
-    # ── 최근 매매 ─────────────────────────────────────────
-    st.markdown("#### ▸ 최근 매매")
-    if not trades.empty:
-        recent = trades.sort_values("date", ascending=False).head(8) if "date" in trades.columns else trades.head(8)
-        rows = []
-        for _, r in recent.iterrows():
-            rows.append(
-                "<tr>"
-                f"<td style='padding:6px 5px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
-                f"<td style='padding:6px 5px;color:#566270;font-size:10px;text-align:center;'>{fmt_date_short(r.get('date'))}</td>"
-                f"<td style='padding:6px 5px;color:#dde3ed;font-weight:600;text-align:left;'>{r.get('name','-')}</td>"
-                f"<td style='padding:6px 5px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
-                f"<td style='padding:6px 5px;color:#6aada5;font-weight:600;text-align:right;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
-                f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:700;text-align:center;'>{_safe_num(r.get('rr_ratio')):.2f}</td>"
-                f"<td style='padding:6px 5px;text-align:center;'>{result_badge(r.get('result','-'))}</td>"
-                f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('peak_pct')):+.1f}%</td>"
-                f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{_safe_int(r.get('days_to_target'))}일</td>"
-                f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('ma_pattern','-')}</td>"
-                f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('sector','-')}</td>"
-                "</tr>"
+    left, right = st.columns(2)
+
+    with left:
+        st.markdown("#### ▸ 최근 매매")
+        if not trades.empty:
+            recent = trades.sort_values("date", ascending=False).head(8) if "date" in trades.columns else trades.head(8)
+            rows = []
+            for _, r in recent.iterrows():
+                rows.append(
+                    "<tr>"
+                    f"<td style='padding:6px 5px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
+                    f"<td style='padding:6px 5px;color:#566270;font-size:10px;text-align:center;'>{fmt_date_short(r.get('date'))}</td>"
+                    f"<td style='padding:6px 5px;color:#dde3ed;font-weight:600;text-align:left;'>{r.get('name','-')}</td>"
+                    f"<td style='padding:6px 5px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#6aada5;font-weight:600;text-align:right;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:700;text-align:center;'>{_safe_num(r.get('rr_ratio')):.2f}</td>"
+                    f"<td style='padding:6px 5px;text-align:center;'>{result_badge(r.get('result','-'))}</td>"
+                    f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('peak_pct')):+.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{_safe_int(r.get('days_to_target'))}일</td>"
+                    f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('ma_pattern','-')}</td>"
+                    f"<td style='padding:6px 5px;color:#566270;text-align:left;font-size:10px;'>{r.get('sector','-')}</td>"
+                    "</tr>"
+                )
+            st.markdown(
+                f"""
+                <div class="table-wrap">
+                <table class="table-dark">
+                <thead><tr>
+                    <th style="text-align:center;">시장</th>
+                    <th style="text-align:center;">날짜</th>
+                    <th style="text-align:left;">종목</th>
+                    <th style="text-align:right;">갭</th>
+                    <th style="text-align:right;color:#6aada5;">목표율</th>
+                    <th style="text-align:center;color:#8fbf8f;">손익비</th>
+                    <th style="text-align:center;">결과</th>
+                    <th style="text-align:right;">최고</th>
+                    <th style="text-align:center;">소요일</th>
+                    <th style="text-align:left;">MA</th>
+                    <th style="text-align:left;">섹터</th>
+                </tr></thead>
+                <tbody>{''.join(rows)}</tbody>
+                </table>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-        st.markdown(
-            f"""
-            <div class="table-wrap">
-            <table class="table-dark">
-            <thead><tr>
-                <th style="text-align:center;">시장</th>
-                <th style="text-align:center;">날짜</th>
-                <th style="text-align:left;">종목</th>
-                <th style="text-align:right;">갭</th>
-                <th style="text-align:right;color:#6aada5;">목표율</th>
-                <th style="text-align:center;color:#8fbf8f;">손익비</th>
-                <th style="text-align:center;">결과</th>
-                <th style="text-align:right;">최고</th>
-                <th style="text-align:center;">소요일</th>
-                <th style="text-align:left;">MA</th>
-                <th style="text-align:left;">섹터</th>
-            </tr></thead>
-            <tbody>{''.join(rows)}</tbody>
-            </table>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.info("매매 데이터가 없습니다.")
+        else:
+            st.info("매매 데이터가 없습니다.")
 
-    # ── Signal Archive ────────────────────────────────────
-    st.markdown("#### ▸ Signal Archive")
-    if not signal_archive.empty:
-        view = signal_archive.sort_values("signal_date", ascending=False).head(8) if "signal_date" in signal_archive.columns else signal_archive.head(8)
-        rows = []
-        for _, r in view.iterrows():
-            rows.append(
-                "<tr>"
-                f"<td style='padding:6px 5px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
-                f"<td style='padding:6px 5px;color:#566270;font-size:10px;text-align:center;'>{fmt_date_short(r.get('signal_date'))}</td>"
-                f"<td style='padding:6px 5px;color:#dde3ed;font-weight:600;text-align:left;'>{r.get('name','-')}</td>"
-                f"<td style='padding:6px 5px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
-                f"<td style='padding:6px 5px;color:#6aada5;font-weight:600;text-align:right;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
-                f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('progress_pct')):.0f}%</td>"
-                f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{_safe_int(r.get('days_elapsed'))}일</td>"
-                f"<td style='padding:6px 5px;text-align:center;'>{archive_result_badge(r.get('archive_result','-'))}</td>"
-                "</tr>"
+    with right:
+        st.markdown("#### ▸ Signal Archive")
+        if not signal_archive.empty:
+            view = signal_archive.sort_values("signal_date", ascending=False).head(8) if "signal_date" in signal_archive.columns else signal_archive.head(8)
+            rows = []
+            for _, r in view.iterrows():
+                rows.append(
+                    "<tr>"
+                    f"<td style='padding:6px 5px;text-align:center;'>{market_badge(r.get('market',''))}</td>"
+                    f"<td style='padding:6px 5px;color:#566270;font-size:10px;text-align:center;'>{fmt_date_short(r.get('signal_date'))}</td>"
+                    f"<td style='padding:6px 5px;color:#dde3ed;font-weight:600;text-align:left;'>{r.get('name','-')}</td>"
+                    f"<td style='padding:6px 5px;color:#7a8599;text-align:right;'>{_safe_num(r.get('gap_rate')):.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#6aada5;font-weight:600;text-align:right;'>{_safe_num(r.get('target_rate')):.1f}%</td>"
+                    f"<td style='padding:6px 5px;color:#8fbf8f;font-weight:600;text-align:right;'>{_safe_num(r.get('progress_pct')):.0f}%</td>"
+                    f"<td style='padding:6px 5px;color:#566270;text-align:center;'>{_safe_int(r.get('days_elapsed'))}일</td>"
+                    f"<td style='padding:6px 5px;text-align:center;'>{archive_result_badge(r.get('archive_result','-'))}</td>"
+                    "</tr>"
+                )
+            st.markdown(
+                f"""
+                <div class="table-wrap">
+                <table class="table-dark">
+                <thead><tr>
+                    <th style="text-align:center;">시장</th>
+                    <th style="text-align:center;">날짜</th>
+                    <th style="text-align:left;">종목</th>
+                    <th style="text-align:right;">갭%</th>
+                    <th style="text-align:right;color:#6aada5;">목표율</th>
+                    <th style="text-align:right;color:#8fbf8f;">진행율</th>
+                    <th style="text-align:center;">소요일</th>
+                    <th style="text-align:center;">결과</th>
+                </tr></thead>
+                <tbody>{''.join(rows)}</tbody>
+                </table>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
-        st.markdown(
-            f"""
-            <div class="table-wrap">
-            <table class="table-dark">
-            <thead><tr>
-                <th style="text-align:center;">시장</th>
-                <th style="text-align:center;">날짜</th>
-                <th style="text-align:left;">종목</th>
-                <th style="text-align:right;">갭%</th>
-                <th style="text-align:right;color:#6aada5;">목표율</th>
-                <th style="text-align:right;color:#8fbf8f;">진행율</th>
-                <th style="text-align:center;">소요일</th>
-                <th style="text-align:center;">결과</th>
-            </tr></thead>
-            <tbody>{''.join(rows)}</tbody>
-            </table>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.info("Signal Archive 데이터가 없습니다.")
+        else:
+            st.info("Signal Archive 데이터가 없습니다.")
 
-    # ── 계좌별 자산추이 ───────────────────────────────────
     st.markdown("#### ▸ 계좌별 자산추이")
     if not equity.empty:
         fig = go.Figure()
