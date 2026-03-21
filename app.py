@@ -1,8 +1,17 @@
 """GAP R-Zone 6.5 트레이딩 대시보드 — Streamlit final app.py"""
 import os, streamlit as st
 
-for _f in sorted(os.listdir(os.path.dirname(os.path.abspath(__file__)))):
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+st.write("## root")
+for _f in sorted(os.listdir(BASE_DIR)):
     st.text(repr(_f))
+
+views_dir = os.path.join(BASE_DIR, "views")
+if os.path.isdir(views_dir):
+    st.write("## views")
+    for _f in sorted(os.listdir(views_dir)):
+        st.text(repr(_f))
 
 st.stop()
 #import os
